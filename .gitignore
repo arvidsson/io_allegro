@@ -26,3 +26,17 @@
 *.exe
 *.out
 *.app
+
+.vs
+*.sdf
+*.sln
+*.vcxproj
+*.vcxproj.filters
+
+io_old/
+Main.cpp
+packages/
+*.config
+ext/
+Debug/
+*.opensdf
