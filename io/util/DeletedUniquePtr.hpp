@@ -11,7 +11,7 @@ namespace io
 
     Examples:
     DeletedUniquePtr<Foo> foo(new Foo(), [](Foo* f) { custom_deleter(f); });
-    DeletedUniquePtr<FILE> file(fopen("file.txt", "r"), [](FILE* f) { fclose(f); });
+    DeletedUniquePtr<FILE> file(fopen("file.txt", "r"), fclose);
 */
 template<typename T>
 using DeletedUniquePtr = std::unique_ptr<T, std::function<void(T*)>>;

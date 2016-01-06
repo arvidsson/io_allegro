@@ -1,11 +1,12 @@
-#include "Harness.hpp"
+#include "Main.hpp"
 #include "Debug.hpp"
+#include <allegro5/allegro.h>
 #include <allegro5/allegro_native_dialog.h>
 
 namespace io
 {
 
-void Harness::Main(std::function<void()> fn)
+void Main(std::function<void()> fn)
 {
     try {
         fn();

@@ -1,16 +1,34 @@
 #include "Keyboard.hpp"
 #include "../Debug.hpp"
+#include <alcpp.hpp>
+using namespace alcpp;
 
 namespace io
 {
 
 Keyboard::Keyboard()
 {
-    if (!al_install_keyboard()) {
-        Throw("Failed to install keyboard");
-    }
-    
     keys.assign(Key::Max, Pressable());
+}
+
+void Keyboard::Clear()
+{
+    for (auto &key : keys) {
+        key.pressed = false;
+        key.released = false;
+    }
+}
+
+void Keyboard::KeyWasPressed(int keycode)
+{
+    keys[keycode].down = true;
+    keys[keycode].pressed = true;
+}
+
+void Keyboard::KeyWasReleased(int keycode)
+{
+    keys[keycode].down = false;
+    keys[keycode].released = true;
 }
 
 bool Keyboard::IsKeyDown(int keycode) const
@@ -40,26 +58,6 @@ int Keyboard::WaitForKeypress()
         al_wait_for_event(queue.get(), &event);
     } while (event.type != ALLEGRO_EVENT_KEY_DOWN);
     return event.keyboard.keycode;
-}
-
-void Keyboard::Clear()
-{
-    for (auto &key : keys) {
-        key.pressed = false;
-        key.released = false;
-    }
-}
-
-void Keyboard::KeyWasPressed(int keycode)
-{
-    keys[keycode].down = true;
-    keys[keycode].pressed = true;
-}
-
-void Keyboard::KeyWasReleased(int keycode)
-{
-    keys[keycode].down = false;
-    keys[keycode].released = true;
 }
 
 }

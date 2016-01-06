@@ -1,12 +1,12 @@
 #pragma once
 
 #include "../math/Vector.hpp"
-#include <allegro5/allegro.h>
+#include <alcpp.hpp>
 
 namespace io
 {
 
-class Camera
+class Camera2D
 {
 public:
     void Use();
@@ -37,8 +37,8 @@ public:
     Vector<float> ToWorld(const Vector<float> &coords);
 
 private:
-    void ApplyTransform(ALLEGRO_TRANSFORM *t);
-    ALLEGRO_TRANSFORM transform;
+    void ApplyTransform(alcpp::Transform &t);
+    alcpp::Transform transform;
     float x = 0.0f, y = 0.0f;
     float zoom = 1.0;
     float rotate = 0.0f;

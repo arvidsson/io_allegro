@@ -1,17 +1,19 @@
 #include "Time.hpp"
-#include <allegro5/allegro.h>
+#include <alcpp.hpp>
+using namespace alcpp;
 
 namespace io
 {
 
-double Time::GetDelta() const
+Time::Time(double delta, double maxFrameTime)
 {
-    return delta;
+    Initialize(delta, maxFrameTime);
 }
 
-double Time::GetAlpha() const
+void Time::Initialize(double delta, double maxFrameTime)
 {
-    return accumulator / delta;
+    this->delta = delta;
+    this->maxFrameTime = maxFrameTime;
 }
 
 void Time::Start()
@@ -22,7 +24,7 @@ void Time::Start()
 
 void Time::Update()
 {
-    double newTime = al_get_time();
+    double newTime = alcpp::Time::GetTime();
     double frameTime = newTime - currentTime;
     if (frameTime > maxFrameTime) {
         frameTime = 0.25;
@@ -37,8 +39,19 @@ bool Time::Step()
         accumulator -= delta;
         return true;
     }
-    
+
+    alpha = accumulator / delta;
     return false;
+}
+
+double Time::GetDelta() const
+{
+    return delta;
+}
+
+double Time::GetAlpha() const
+{
+    return alpha;
 }
 
 }

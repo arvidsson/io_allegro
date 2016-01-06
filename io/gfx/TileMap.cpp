@@ -1,6 +1,6 @@
 #include "Tilemap.hpp"
 #include "../Debug.hpp"
-#include "Camera.hpp"
+#include "Camera2D.hpp"
 
 namespace io
 {
@@ -34,7 +34,7 @@ void Tilemap::LoadTileset(Image tileSheet, Vector<int> offsetCorner, Vector<int>
 
 Image Tilemap::GetImageById(int id)
 {
-    Assert(id >= 0 && id < tileBitmaps.size());
+    Assert(id >= 0 && id < (int)tileBitmaps.size());
     return tileBitmaps[id];
 }
 

@@ -1,10 +1,5 @@
 #include "Window.hpp"
 #include "Debug.hpp"
-#include "render/Color.hpp"
-#include "render/Camera.hpp"
-#include "render/TileMap.hpp"
-#include "resource/Image.hpp"
-#include "resource/Font.hpp"
 #include <sstream>
 #include <cstdarg>
 #include <allegro5/allegro_primitives.h>
@@ -12,61 +7,29 @@
 #include <allegro5/allegro_font.h>
 #include <allegro5/allegro_ttf.h>
 
+using namespace alcpp;
+
 namespace io
 {
 
-Window::Window(int width, int height, bool fullscreen, bool vsync, int multisampling)
-{
-    if (!al_init_primitives_addon()) {
-        Throw("Failed to initialize primitives addon");
-    }
-
-    if (!al_init_image_addon()) {
-        Throw("Failed to initialize image addon");
-    }
-
-    if (!al_init_font_addon()) {
-        Throw("Failed to initialize font addon");
-    }
-
-    if (!al_init_ttf_addon()) {
-        Throw("Failed to initialize ttf addon");
-    }
-    
-    fullscreen ? al_set_new_display_flags(ALLEGRO_FULLSCREEN_WINDOW) : al_set_new_display_flags(ALLEGRO_WINDOWED);
-    vsync ? al_set_new_display_option(ALLEGRO_VSYNC, 1, ALLEGRO_REQUIRE) : al_set_new_display_option(ALLEGRO_VSYNC, 2, ALLEGRO_REQUIRE);
-    if (multisampling) {
-        al_set_new_display_option(ALLEGRO_SAMPLE_BUFFERS, 1, ALLEGRO_REQUIRE);
-        al_set_new_display_option(ALLEGRO_SAMPLES, multisampling, ALLEGRO_REQUIRE);
-    }
-    
-    display = std::shared_ptr<ALLEGRO_DISPLAY>(al_create_display(width, height), al_destroy_display);
-    if (!display) {
-        Throw("Failed to create %s display (%d x %d)", fullscreen ? "fullscreen" : "windowed", width, height);
-    }
-    al_set_window_title(display.get(), "io");
-    camera = std::make_unique<Camera>();
-    open = true;
-}
-
 void Window::SetTitle(const std::string &title)
 {
-    al_set_window_title(display.get(), title.c_str());
+    al_set_window_title(al_get_current_display(), title.c_str());
 }
 
 int Window::GetWidth() const
 {
-    return al_get_display_width(display.get());
+    return al_get_display_width(al_get_current_display());
 }
 
 int Window::GetHeight() const
 {
-    return al_get_display_height(display.get());
+    return al_get_display_height(al_get_current_display());
 }
 
 void Window::ToggleFullscreen()
 {
-    al_set_display_flag(display.get(), ALLEGRO_FULLSCREEN_WINDOW, !(al_get_display_flags(display.get()) & ALLEGRO_FULLSCREEN_WINDOW));
+    al_set_display_flag(al_get_current_display(), ALLEGRO_FULLSCREEN_WINDOW, !(al_get_display_flags(al_get_current_display()) & ALLEGRO_FULLSCREEN_WINDOW));
 }
 
 void Window::Render(Image image, const Vector<float> &position, int flip)
@@ -107,8 +70,8 @@ void Window::Printf(Font font, const Vector<float> &position, const Color &color
 
 void Window::Render(Tilemap &tilemap)
 {
-    auto cameraSize = camera->ToWorld(GetWidth(), GetHeight());
-    auto cameraPos = Vector<float>(camera->GetX() - cameraSize.x / 2, camera->GetY() - cameraSize.y / 2);
+    auto cameraSize = camera.ToWorld(GetWidth(), GetHeight());
+    auto cameraPos = Vector<float>(camera.GetX() - cameraSize.x / 2, camera.GetY() - cameraSize.y / 2);
 
     // figure out what tiles to draw depending on camera movement, so we don't waste time trying to draw every tile, visible or not
     Vector<int> topLeft = { (int)cameraPos.x / tilemap.GetTileWidth(), (int)cameraPos.y / tilemap.GetTileHeight() };
@@ -130,24 +93,9 @@ void Window::Render(Tilemap &tilemap)
     al_hold_bitmap_drawing(false);
 }
 
-Camera& Window::GetCamera()
-{
-    Assert(camera != nullptr);
-    return *camera.get();
-}
-
-void Window::HandleEvent(const ALLEGRO_EVENT &event)
-{
-    switch (event.type) {
-        case ALLEGRO_EVENT_DISPLAY_CLOSE:
-            Close();
-            break;
-    }
-}
-
 void Window::Clear()
 {
-    al_set_target_backbuffer(display.get());
+    al_set_target_backbuffer(al_get_current_display());
     al_clear_to_color(al_map_rgb(0, 0, 0));
 }
 

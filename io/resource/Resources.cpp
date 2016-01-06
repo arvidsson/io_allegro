@@ -1,9 +1,5 @@
 #include "Resources.hpp"
 #include "../Debug.hpp"
-#include "Image.hpp"
-#include "Font.hpp"
-#include "Sound.hpp"
-#include "Music.hpp"
 
 namespace io
 {

@@ -1,15 +1,14 @@
 #pragma once
 
+#include "Image.hpp"
+#include "Font.hpp"
+#include "Sound.hpp"
+#include "Music.hpp"
 #include <unordered_map>
 #include <string>
 
 namespace io
 {
-
-class Image;
-class Font;
-class Sound;
-class Music;
 
 class Resources
 {

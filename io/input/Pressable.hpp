@@ -3,7 +3,6 @@
 namespace io
 {
 
-// Stores the state of keys, buttons, etc...
 struct Pressable
 {
     bool down = false;

@@ -2,6 +2,7 @@
 
 #include "Math.hpp"
 #include <initializer_list>
+#include <vector>
 #include <string>
 #include <sstream>
 
@@ -22,6 +23,19 @@ public:
         case 2: y = *(it + 1);
         case 1: x = *it;
         }
+        return *this;
+    }
+
+    Vector(const std::vector<T> &v)
+    {
+        x = v[0];
+        y = v[1];
+    }
+
+    Vector<T>& operator=(const std::vector<T> &v)
+    {
+        x = v[0];
+        y = v[1];
         return *this;
     }
 

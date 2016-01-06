@@ -1,45 +1,14 @@
 #include "Mouse.hpp"
 #include "../Debug.hpp"
-#include <allegro5/allegro.h>
+#include <alcpp.hpp>
+using namespace alcpp;
 
 namespace io
 {
 
 Mouse::Mouse()
 {
-    if (!al_install_mouse()) {
-        Throw("Failed to install mouse");
-    }
-    
-    buttons.assign(Button::Max, Pressable());
-}
-
-void Mouse::Show()
-{
-    al_show_mouse_cursor(al_get_current_display());
-}
-
-void Mouse::Hide()
-{
-    al_hide_mouse_cursor(al_get_current_display());
-}
-
-bool Mouse::IsButtonDown(int button) const
-{
-    Assert(button >= 0 && button < Button::Max);
-    return buttons[button].down;
-}
-
-bool Mouse::IsButtonPressed(int button) const
-{
-    Assert(button >= 0 && button < Button::Max);
-    return buttons[button].pressed;
-}
-
-bool Mouse::IsButtonReleased(int button) const
-{
-    Assert(button >= 0 && button < Button::Max);
-    return buttons[button].released;
+    buttons.assign(MouseButton::Max, Pressable());
 }
 
 void Mouse::Clear()
@@ -52,6 +21,7 @@ void Mouse::Clear()
     oldX = x;
     oldY = y;
     oldZ = z;
+    oldW = w;
 }
 
 void Mouse::ButtonWasPressed(int button)
@@ -66,11 +36,30 @@ void Mouse::ButtonWasReleased(int button)
     buttons[button].released = true;
 }
 
-void Mouse::WasMoved(int x, int y, int z)
+void Mouse::WasMoved(int x, int y, int z, int w)
 {
     this->x = x;
     this->y = y;
     this->z = z;
+    this->w = w;
+}
+
+bool Mouse::IsButtonDown(int button) const
+{
+    Assert(button >= 0 && button < MouseButton::Max);
+    return buttons[button].down;
+}
+
+bool Mouse::IsButtonPressed(int button) const
+{
+    Assert(button >= 0 && button < MouseButton::Max);
+    return buttons[button].pressed;
+}
+
+bool Mouse::IsButtonReleased(int button) const
+{
+    Assert(button >= 0 && button < MouseButton::Max);
+    return buttons[button].released;
 }
 
 }
