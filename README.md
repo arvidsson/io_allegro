@@ -1,2 +1,2 @@
 # io
-C++ game framework for rapid prototyping with Allegro 5.
+Allegro 5 C++ game/application framework
