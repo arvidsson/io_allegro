@@ -2,7 +2,7 @@
 
 #include "Vector.hpp"
 #include "Size.hpp"
-#include "Math.hpp"
+#include "MathHelper.hpp"
 #include <initializer_list>
 #include <string>
 #include <sstream>

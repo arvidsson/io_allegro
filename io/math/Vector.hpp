@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Math.hpp"
+#include "MathHelper.hpp"
 #include <initializer_list>
 #include <vector>
 #include <string>
@@ -44,9 +44,9 @@ public:
         return x == v.x && y = v.y;
     }
 
-    bool IsEqual(const Vector<T> &v, const T epsilon = Math<T>::AlmostZero) const
+    bool IsEqual(const Vector<T> &v, const T epsilon = MathHelper<T>::AlmostZero) const
     {
-        return Math<T>::IsEqual(x, v.x, epsilon) && Math<T>::IsEqual(y, v.y, epsilon);
+        return MathHelper<T>::IsEqual(x, v.x, epsilon) && MathHelper<T>::IsEqual(y, v.y, epsilon);
     }
 
     bool operator!=(const Vector<T> &v) const

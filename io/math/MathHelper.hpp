@@ -12,7 +12,7 @@ namespace io
 {
 
 template <typename T>
-class Math
+class MathHelper
 {
 public:
     static const T AlmostZero;
@@ -102,13 +102,13 @@ public:
     }
 };
 
-template <typename T> const T Math<T>::AlmostZero = static_cast<T>(0.001);
-template <typename T> const T Math<T>::Pi = static_cast<T>(3.141592653589793);
-template <typename T> const T Math<T>::TwoPi = static_cast<T>(2.0) * pi;
-template <typename T> const T Math<T>::PiOverTwo = pi / static_cast<T>(2.0);
-template <typename T> const T Math<T>::PiOverFour = pi / static_cast<T>(4.0);
-template <typename T> const T Math<T>::DegToRad = pi / static_cast<T>(180.0);
-template <typename T> const T Math<T>::RadToDeg = static_cast<T>(180.0) / pi;
-template <typename T> const T Math<T>::E = static_cast<T>(2.718281828459045);
+template <typename T> const T MathHelper<T>::AlmostZero = static_cast<T>(0.001);
+template <typename T> const T MathHelper<T>::Pi = static_cast<T>(3.141592653589793);
+template <typename T> const T MathHelper<T>::TwoPi = static_cast<T>(2.0) * pi;
+template <typename T> const T MathHelper<T>::PiOverTwo = pi / static_cast<T>(2.0);
+template <typename T> const T MathHelper<T>::PiOverFour = pi / static_cast<T>(4.0);
+template <typename T> const T MathHelper<T>::DegToRad = pi / static_cast<T>(180.0);
+template <typename T> const T MathHelper<T>::RadToDeg = static_cast<T>(180.0) / pi;
+template <typename T> const T MathHelper<T>::E = static_cast<T>(2.718281828459045);
 
 }

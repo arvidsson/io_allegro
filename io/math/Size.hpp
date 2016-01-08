@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Math.hpp"
+#include "MathHelper.hpp"
 #include <initializer_list>
 #include <string>
 #include <sstream>
