@@ -22,14 +22,25 @@ public:
     void Initialize(int width, int height, bool fullscreen = false);
     void Run();
     void Quit();
-
-    virtual void TimerEvent() {}
+    
+    // events
     virtual void KeyPressEvent(int key) {}
     virtual void KeyReleaseEvent(int key) {}
+    virtual void KeyCharEvent(int key, int unichar, int modifiers, bool repeat) {}
     virtual void MouseButtonPressEvent(int button) {}
     virtual void MouseButtonReleaseEvent(int button) {}
     virtual void MouseMoveEvent(int x, int y) {}
     virtual void MouseWheelEvent(int z, int w) {}
+    virtual void MouseWarpedEvent(int x, int y) {}
+    virtual void MouseEnterDisplay() {}
+    virtual void MouseLeaveDisplay() {}
+    virtual void TouchBeginEvent() {}
+    virtual void TouchEndEvent() {}
+    virtual void TouchMoveEvent() {}
+    virtual void TouchCancelEvent() {}
+    virtual void TimerEvent() {}
+    virtual void DisplayCloseEvent() { Quit(); }
+    // TODO: rest of display events
 
     virtual void Update() = 0;
     virtual void Render() = 0;

@@ -41,10 +41,6 @@ void Application::Run()
                 event = eventQueue.GetNextEvent();
 
                 switch (event.GetType()) {
-                    case Event::Type::Timer:
-                        TimerEvent();
-                        break;
-
                     case Event::Type::KeyDown:
                         KeyPressEvent(event.GetKeyboardKeycode());
                         input.keyboard.KeyWasPressed(event.GetKeyboardKeycode());
@@ -53,6 +49,10 @@ void Application::Run()
                     case Event::Type::KeyUp:
                         KeyReleaseEvent(event.GetKeyboardKeycode());
                         input.keyboard.KeyWasReleased(event.GetKeyboardKeycode());
+                        break;
+
+                    case Event::Type::KeyChar:
+                        KeyCharEvent(event.GetKeyboardKeycode(), event.GetKeyboardCharacter(), event.GetKeyboardModifiers(), event.GetKeyboardRepeat());
                         break;
 
                     case Event::Type::MouseButtonDown:
@@ -71,8 +71,41 @@ void Application::Run()
                         input.mouse.WasMoved(event.GetMouseX(), event.GetMouseY(), event.GetMouseZ(), event.GetMouseW());
                         break;
 
+                    case Event::Type::MouseWarped:
+                        MouseWarpedEvent(event.GetMouseX(), event.GetMouseY());
+                        input.mouse.WasMoved(event.GetMouseX(), event.GetMouseY(), event.GetMouseZ(), event.GetMouseW());
+                        break;
+
+                    case Event::Type::MouseEnterDisplay:
+                        MouseEnterDisplay();
+                        break;
+
+                    case Event::Type::MouseLeaveDisplay:
+                        MouseLeaveDisplay();
+                        break;
+
+                    case Event::Type::TouchBegin:
+                        TouchBeginEvent();
+                        break;
+
+                    case Event::Type::TouchEnd:
+                        TouchEndEvent();
+                        break;
+
+                    case Event::Type::TouchMove:
+                        TouchMoveEvent();
+                        break;
+
+                    case Event::Type::TouchCancel:
+                        TouchCancelEvent();
+                        break;
+
+                    case Event::Type::Timer:
+                        TimerEvent();
+                        break;
+
                     case Event::Type::DisplayClose:
-                        Quit();
+                        DisplayCloseEvent();
                         break;
                 }
             } while (event);
