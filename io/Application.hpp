@@ -34,6 +34,10 @@ public:
     virtual void MouseWarpedEvent(int x, int y) {}
     virtual void MouseEnterDisplay() {}
     virtual void MouseLeaveDisplay() {}
+    virtual void JoystickAxisEvent(int stick, int axis, float pos) {}
+    virtual void JoystickButtonPressEvent(int button) {}
+    virtual void JoystickButtonReleaseEvent(int button) {}
+    virtual void JoystickConfigurationEvent() {}
     virtual void TouchBeginEvent() {}
     virtual void TouchEndEvent() {}
     virtual void TouchMoveEvent() {}

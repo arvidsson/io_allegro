@@ -84,6 +84,24 @@ void Application::Run()
                         MouseLeaveDisplay();
                         break;
 
+                    case Event::Type::JoystickAxis:
+                        JoystickAxisEvent(event.GetJoystickStick(), event.GetJoystickAxis(), event.GetJoystickAxisPosition());
+                        break;
+
+                    case Event::Type::JoystickButtonDown:
+                        JoystickButtonPressEvent(event.GetJoystickButton());
+                        break;
+
+                    case Event::Type::JoystickButtonUp:
+                        JoystickButtonReleaseEvent(event.GetJoystickButton());
+                        break;
+
+                    case Event::Type::JoystickConfiguration:
+                        al_reconfigure_joysticks();
+                        JoystickConfigurationEvent();
+                        // TODO: update Input joystick handling
+                        break;
+
                     case Event::Type::TouchBegin:
                         TouchBeginEvent();
                         break;
