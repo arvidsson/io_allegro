@@ -3,8 +3,8 @@
 #include "math/Vector.hpp"
 #include "math/Size.hpp"
 #include "math/Rect.hpp"
-#include "gfx/Camera2D.hpp"
-#include "gfx/TileMap.hpp"
+#include "graphics/Camera2D.hpp"
+#include "graphics/TileMap.hpp"
 #include "resource/Image.hpp"
 #include "resource/Font.hpp"
 #include <alcpp.hpp>

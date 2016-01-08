@@ -43,8 +43,18 @@ public:
     virtual void TouchMoveEvent(int id, int x, int y, bool primary) {}
     virtual void TouchCancelEvent(int id, int x, int y, bool primary) {}
     virtual void TimerEvent() {}
+    virtual void DisplayExposeEvent(int x, int y, int width, int height) {}
+    virtual void DisplayResizeEvent(int x, int y, int width, int height) {}
     virtual void DisplayCloseEvent() { Quit(); }
-    // TODO: rest of display events
+    virtual void DisplayLostEvent() {}
+    virtual void DisplayFoundEvent() {}
+    virtual void DisplaySwitchOutEvent() {}
+    virtual void DisplaySwitchInEvent() {}
+    virtual void DisplayOrientationEvent(int orientation) {}
+    virtual void DisplayHaltDrawingEvent() {}
+    virtual void DisplayResumeDrawingEvent() {}
+    virtual void DisplayConnectedEvent() {}
+    virtual void DisplayDisconnectedEvent() {}
 
     virtual void Update() = 0;
     virtual void Render() = 0;

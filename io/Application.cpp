@@ -122,8 +122,52 @@ void Application::Run()
                         TimerEvent();
                         break;
 
+                    case Event::Type::DisplayExpose:
+                        DisplayExposeEvent(event.GetDisplayX(), event.GetDisplayY(), event.GetDisplayWidth(), event.GetDisplayHeight());
+                            break;
+
+                    case Event::Type::DisplayResize:
+                        DisplayResizeEvent(event.GetDisplayX(), event.GetDisplayY(), event.GetDisplayWidth(), event.GetDisplayHeight());
+                        break;
+
                     case Event::Type::DisplayClose:
                         DisplayCloseEvent();
+                        break;
+
+                    case Event::Type::DisplayLost:
+                        DisplayLostEvent();
+                        break;
+
+                    case Event::Type::DisplayFound:
+                        DisplayFoundEvent();
+                        break;
+
+                    case Event::Type::DisplaySwitchOut:
+                        DisplaySwitchOutEvent();
+                        break;
+
+                    case Event::Type::DisplaySwitchIn:
+                        DisplaySwitchInEvent();
+                        break;
+
+                    case Event::Type::DisplayOrientation:
+                        DisplayOrientationEvent(event.GetDisplayOrientation());
+                        break;
+
+                    case Event::Type::DisplayHaltDrawing:
+                        DisplayHaltDrawingEvent();
+                        break;
+
+                    case Event::Type::DisplayResumeDrawing:
+                        DisplayResumeDrawingEvent();
+                        break;
+
+                    case Event::Type::DisplayConnected:
+                        DisplayConnectedEvent();
+                        break;
+
+                    case Event::Type::DisplayDisconnected:
+                        DisplayDisconnectedEvent();
                         break;
                 }
             } while (event);
