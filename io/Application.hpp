@@ -38,10 +38,10 @@ public:
     virtual void JoystickButtonPressEvent(int button) {}
     virtual void JoystickButtonReleaseEvent(int button) {}
     virtual void JoystickConfigurationEvent() {}
-    virtual void TouchBeginEvent() {}
-    virtual void TouchEndEvent() {}
-    virtual void TouchMoveEvent() {}
-    virtual void TouchCancelEvent() {}
+    virtual void TouchBeginEvent(int id, int x, int y, bool primary) {}
+    virtual void TouchEndEvent(int id, int x, int y, bool primary) {}
+    virtual void TouchMoveEvent(int id, int x, int y, bool primary) {}
+    virtual void TouchCancelEvent(int id, int x, int y, bool primary) {}
     virtual void TimerEvent() {}
     virtual void DisplayCloseEvent() { Quit(); }
     // TODO: rest of display events

@@ -16,6 +16,9 @@ public:
 
     Keyboard keyboard;
     Mouse mouse;
+
+    // TODO: add joystick support
+    // TODO: add touch input support
 };
 
 }

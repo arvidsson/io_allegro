@@ -103,19 +103,19 @@ void Application::Run()
                         break;
 
                     case Event::Type::TouchBegin:
-                        TouchBeginEvent();
+                        TouchBeginEvent(event.GetTouchId(), event.GetTouchX(), event.GetTouchY(), event.GetTouchPrimary());
                         break;
 
                     case Event::Type::TouchEnd:
-                        TouchEndEvent();
+                        TouchEndEvent(event.GetTouchId(), event.GetTouchX(), event.GetTouchY(), event.GetTouchPrimary());
                         break;
 
                     case Event::Type::TouchMove:
-                        TouchMoveEvent();
+                        TouchMoveEvent(event.GetTouchId(), event.GetTouchX(), event.GetTouchY(), event.GetTouchPrimary());
                         break;
 
                     case Event::Type::TouchCancel:
-                        TouchCancelEvent();
+                        TouchCancelEvent(event.GetTouchId(), event.GetTouchX(), event.GetTouchY(), event.GetTouchPrimary());
                         break;
 
                     case Event::Type::Timer:
