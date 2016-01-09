@@ -61,6 +61,7 @@ public:
 
 protected:
     alcpp::Display display;
+    alcpp::Color clearColor = { 0, 0, 0 };
     Time time;
     Input input;
 

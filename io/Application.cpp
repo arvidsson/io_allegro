@@ -177,7 +177,7 @@ void Application::Run()
         }
 
         display.SetAsTarget();
-        display.Clear({ 0, 0, 0 });
+        display.Clear(clearColor);
         Render();
         display.Flip();
     }
