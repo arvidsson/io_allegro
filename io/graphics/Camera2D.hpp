@@ -27,18 +27,17 @@ public:
     /*
         Converts a world coordinate to screen coordinates.
     */
-    Vector<float> ToScreen(float x, float y);
-    Vector<float> ToScreen(const Vector<float> &coords);
+    Vector<float> ToScreen(float x, float y) const;
+    Vector<float> ToScreen(const Vector<float> &coords) const;
 
     /*
         Converts a screen coordinate to world coordinates.
     */
-    Vector<float> ToWorld(float x, float y);
-    Vector<float> ToWorld(const Vector<float> &coords);
+    Vector<float> ToWorld(float x, float y) const;
+    Vector<float> ToWorld(const Vector<float> &coords) const;
 
 private:
-    void ApplyTransform(alcpp::Transform &t);
-    alcpp::Transform transform;
+    alcpp::Transform GetTransform() const;
     float x = 0.0f, y = 0.0f;
     float zoom = 1.0;
     float rotate = 0.0f;
