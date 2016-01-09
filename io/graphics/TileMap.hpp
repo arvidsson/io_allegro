@@ -1,40 +1,44 @@
 #pragma once
 
 #include "Tile.hpp"
-#include "../resource/Image.hpp"
-#include <allegro5/allegro.h>
+#include "../math/Vector.hpp"
+#include <alcpp.hpp>
 #include <vector>
 
 namespace io
 {
 
-class Camera;
+class Camera2D;
 
+/*
+    NOTE: for the tilesheet, leave transparent border around sprites or repeat the border for tiling tiles in order to avoid texture bleeding.
+*/
 class Tilemap
 {
 public:
-    Tilemap(int width, int height, int tileWidth, int tileHeight);
-    void LoadTileset(Image tileSheet, Vector<int> offsetCorner = { 0, 0 }, Vector<int> offsetBetween = { 0, 0 });
-
-    Image GetImageById(int id);
+    Tilemap(int width, int height, int tileWidth, int tileHeight, alcpp::Bitmap tileSheet = alcpp::Bitmap(), int offset = 0);
+    void SetTileset(alcpp::Bitmap tileSheet, int offset = 0);
 
     int GetWidth() const { return width; }
     int GetHeight() const { return height; }
-    int GetTileWidth() const { return tileWidth; }
-    int GetTileHeight() const { return tileHeight; }
     int GetWorldWidth() const { return width * tileWidth; }
     int GetWorldHeight() const { return height * tileHeight; }
 
-    Tile::Ptr GetTile(int x, int y);
+    Tile GetTile(int x, int y);
     int GetTileX(float x) { return x / tileWidth; }
     int GetTileY(float y) { return y / tileHeight; }
+    int GetTileWidth() const { return tileWidth; }
+    int GetTileHeight() const { return tileHeight; }
+
+    void Render(alcpp::Display &display, const Vector<int> &topLeft, const Vector<int> &bottomRight);
+    void Render(alcpp::Display &display, const Camera2D& camera);
 
 private:
-    Image tileSheet;
-    std::vector<Image> tileBitmaps;
+    alcpp::Bitmap tileSheet;
     int width, height;
     int tileWidth, tileHeight;
-    std::vector<Tile::Ptr> tiles;
+    int offset;
+    std::vector<Tile> tiles;
 };
 
 }
