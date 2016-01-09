@@ -44,7 +44,7 @@ Tile Tilemap::GetTile(int x, int y)
     return tiles[x + width * y];
 }
 
-void Tilemap::Render(Display &display, const Vector<int> &topLeft, const Vector<int> &bottomRight)
+void Tilemap::Render(Display &display, const Vec2<int> &topLeft, const Vec2<int> &bottomRight)
 {
     display.HoldDrawing();
     for (int y = topLeft.y; y < bottomRight.y; y++) {
@@ -63,13 +63,13 @@ void Tilemap::Render(Display &display, const Vector<int> &topLeft, const Vector<
 void Tilemap::Render(Display &display, const Camera2D &camera)
 {
     auto cameraSize = camera.ToWorld(GetWidth(), GetHeight());
-    auto cameraPos = Vector<float>(camera.GetX() - cameraSize.x / 2, camera.GetY() - cameraSize.y / 2);
+    auto cameraPos = Vec2<float>(camera.GetX() - cameraSize.x / 2, camera.GetY() - cameraSize.y / 2);
 
     // figure out what tiles to draw depending on camera movement, so we don't waste time trying to draw every tile, visible or not
-    Vector<int> topLeft = { (int)cameraPos.x / GetTileWidth(), (int)cameraPos.y / GetTileHeight() };
+    Vec2<int> topLeft = { (int)cameraPos.x / GetTileWidth(), (int)cameraPos.y / GetTileHeight() };
     if (topLeft.x < 0) topLeft.x = 0;
     if (topLeft.y < 0) topLeft.y = 0;
-    Vector<int> bottomRight = { (int)(cameraSize.x) / GetTileWidth() + 1, (int)(cameraSize.y) / GetTileHeight() + 1 };
+    Vec2<int> bottomRight = { (int)(cameraSize.x) / GetTileWidth() + 1, (int)(cameraSize.y) / GetTileHeight() + 1 };
     if (bottomRight.x > GetWidth()) bottomRight.x = GetWidth();
     if (bottomRight.y > GetHeight()) bottomRight.y = GetHeight();
 

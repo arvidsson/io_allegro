@@ -1,6 +1,5 @@
 #pragma once
 
-#include "../math/Vector.hpp"
 #include <alcpp.hpp>
 
 namespace io
@@ -27,14 +26,14 @@ public:
     /*
         Converts a world coordinate to screen coordinates.
     */
-    Vector<float> ToScreen(float x, float y) const;
-    Vector<float> ToScreen(const Vector<float> &coords) const;
+    alcpp::Vec2<float> ToScreen(float x, float y) const;
+    alcpp::Vec2<float> ToScreen(const alcpp::Vec2<float> &coords) const;
 
     /*
         Converts a screen coordinate to world coordinates.
     */
-    Vector<float> ToWorld(float x, float y) const;
-    Vector<float> ToWorld(const Vector<float> &coords) const;
+    alcpp::Vec2<float> ToWorld(float x, float y) const;
+    alcpp::Vec2<float> ToWorld(const alcpp::Vec2<float> &coords) const;
 
 private:
     alcpp::Transform GetTransform() const;

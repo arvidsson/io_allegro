@@ -1,24 +1,26 @@
 #include "Resources.hpp"
-#include "../Debug.hpp"
+#include "Debug.hpp"
+using namespace alcpp;
 
 namespace io
 {
 
-Image Resources::GetImage(const std::string &filename)
+Bitmap Resources::GetBitmap(const std::string &filename)
 {
-    if (images.find(filename) != images.end()) {
-        return images[filename];
+    if (bitmaps.find(filename) != bitmaps.end()) {
+        return bitmaps[filename];
     }
 
-    Image image(filename);
-    if (!image) {
-        Throw("Failed to load image: %s", filename.c_str());
+    Bitmap bitmap(filename);
+    if (!bitmap) {
+        Throw("Failed to load bitmap: %s", filename.c_str());
     }
 
-    images[filename] = image;
-    return image;
+    bitmaps[filename] = bitmap;
+    return bitmap;
 }
 
+/*
 Font Resources::GetFont(const std::string &filename, int size)
 {
     std::string fontName = filename + std::to_string(size);
@@ -67,13 +69,14 @@ Music Resources::GetMusic(const std::string &filename)
     music[filename] = song;
     return song;
 }
+*/
 
 void Resources::Unload()
 {
-    images.clear();
-    fonts.clear();
+    bitmaps.clear();
+    /*fonts.clear();
     sounds.clear();
-    music.clear();
+    music.clear();*/
 }
 
 }

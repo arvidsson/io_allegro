@@ -48,25 +48,25 @@ void Camera2D::RotateBy(float r)
     rotate += r;
 }
 
-Vector<float> Camera2D::ToScreen(float x, float y) const
+Vec2<float> Camera2D::ToScreen(float x, float y) const
 {
     Transform t = GetTransform();
     return t.TransformCoordinates(x, y);
 }
 
-Vector<float> Camera2D::ToScreen(const Vector<float> &coords) const
+Vec2<float> Camera2D::ToScreen(const Vec2<float> &coords) const
 {
     return ToScreen(coords.x, coords.y);
 }
 
-Vector<float> Camera2D::ToWorld(float x, float y) const
+Vec2<float> Camera2D::ToWorld(float x, float y) const
 {
     Transform t = GetTransform();
     t.Invert();
     return t.TransformCoordinates(x, y);
 }
 
-Vector<float> Camera2D::ToWorld(const Vector<float> &coords) const
+Vec2<float> Camera2D::ToWorld(const Vec2<float> &coords) const
 {
     return ToWorld(coords.x, coords.y);
 }

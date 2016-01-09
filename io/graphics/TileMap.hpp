@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Tile.hpp"
-#include "../math/Vector.hpp"
 #include <alcpp.hpp>
 #include <vector>
 
@@ -30,7 +29,7 @@ public:
     int GetTileWidth() const { return tileWidth; }
     int GetTileHeight() const { return tileHeight; }
 
-    void Render(alcpp::Display &display, const Vector<int> &topLeft, const Vector<int> &bottomRight);
+    void Render(alcpp::Display &display, const alcpp::Vec2<int> &topLeft, const alcpp::Vec2<int> &bottomRight);
     void Render(alcpp::Display &display, const Camera2D& camera);
 
 private:
