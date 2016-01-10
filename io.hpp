@@ -6,3 +6,5 @@
 
 #include "io/graphics/Camera2D.hpp"
 #include "io/graphics/Tilemap.hpp"
+
+#include "io/math/Random.hpp"

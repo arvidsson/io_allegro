@@ -31,6 +31,23 @@ public:
         return dist(rng);
     }
 
+    // Returns true if the random number is one in [chance].
+    bool OneIn(int chance)
+    {
+        if (GetNextInt(chance - 1) == 0)
+            return true;
+        return false;
+    }
+
+    // Returns the result of rolling dice with a number of sides.
+    int RollDice(int number, int sides)
+    {
+        int result = 0;
+        for (int i = 0; i < number; i++)
+            result += GetNextInt(sides, 1);
+        return result;
+    }
+
 private:
     std::mt19937 rng;
 };
