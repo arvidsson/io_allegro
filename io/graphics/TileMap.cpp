@@ -40,7 +40,7 @@ void Tilemap::SetTileset(alcpp::Bitmap tilesheet, alcpp::Vec2<int> offset, alcpp
     }
 }
 
-Tile Tilemap::GetTile(int x, int y)
+Tile& Tilemap::GetTile(int x, int y)
 {
     Assert(x >= 0 && x < width);
     Assert(y >= 0 && y < height);

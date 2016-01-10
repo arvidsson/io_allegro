@@ -23,7 +23,7 @@ public:
     int GetWorldWidth() const { return width * tileWidth; }
     int GetWorldHeight() const { return height * tileHeight; }
 
-    Tile GetTile(int x, int y);
+    Tile& GetTile(int x, int y);
     int GetTileX(float x) { return x / tileWidth; }
     int GetTileY(float y) { return y / tileHeight; }
     int GetTileWidth() const { return tileWidth; }
