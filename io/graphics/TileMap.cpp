@@ -6,7 +6,7 @@ using namespace alcpp;
 namespace io
 {
 
-Tilemap::Tilemap(int width, int height, int tileWidth, int tileHeight, Bitmap tileSheet, int offset) : width(width), height(height), tileWidth(tileWidth), tileHeight(tileHeight)
+Tilemap::Tilemap(int width, int height, int tileWidth, int tileHeight, Bitmap tilesheet, alcpp::Vec2<int> offset, alcpp::Vec2<int> padding) : width(width), height(height), tileWidth(tileWidth), tileHeight(tileHeight), tilesheet(tilesheet)
 {
     // populate tiles with zero ids
     for (int i = 0; i < width; i++) {
@@ -15,26 +15,29 @@ Tilemap::Tilemap(int width, int height, int tileWidth, int tileHeight, Bitmap ti
         }
     }
 
-    SetTileset(tileSheet, offset);
+    if (tilesheet) {
+        SetTileset(tilesheet, offset);
+    }
 }
 
-void Tilemap::SetTileset(alcpp::Bitmap tileSheet, int offset)
+void Tilemap::SetTileset(alcpp::Bitmap tilesheet, alcpp::Vec2<int> offset, alcpp::Vec2<int> padding)
 {
-    this->tileSheet = tileSheet;
+    this->tilesheet = tilesheet;
     this->offset = offset;
+    this->padding = padding;
 
-    /*int tileX = tileSheet.GetWidth() / tileWidth;
-    int tileY = tileSheet.GetHeight() / tileHeight;
+    int tileX = tilesheet.GetWidth() / tileWidth;
+    int tileY = tilesheet.GetHeight() / tileHeight;
 
     // cut up the tilesheet
     for (int j = 0; j < tileY; j++) {
         for (int i = 0; i < tileX; i++) {
-            int x = i * tileWidth + (i ? offsetBetween.x : offsetCorner.x);
-            int y = j * tileHeight + (j ? offsetBetween.y : offsetCorner.y);
-            Image bmp(tileSheet, x, y, tileWidth, tileHeight);
-            tileBitmaps.push_back(bmp);
+            int x = i * tileWidth + (i ? padding.x : offset.x);
+            int y = j * tileHeight + (j ? padding.y : offset.y);
+            Bitmap bmp(tilesheet, x, y, tileWidth, tileHeight);
+            tileset.push_back(bmp);
         }
-    }*/
+    }
 }
 
 Tile Tilemap::GetTile(int x, int y)
@@ -51,10 +54,8 @@ void Tilemap::Render(Display &display, const Vec2<int> &topLeft, const Vec2<int>
         for (int x = topLeft.x; x < bottomRight.x; x++) {
             float w = GetTileWidth();
             float h = GetTileHeight();
-            // TODO: get u,v from tileId!
-            float u = x * w + offset;
-            float v = y * h + offset;
-            display.DrawScaled(tileSheet, u, v, w, h, x * w, y * h, w, h);
+            auto tile = GetTile(x, y);
+            display.Draw(GetTilesetBitmapById(tile.GetID()), x * w, y * h);
         }
     }
     display.ReleaseDrawing();
@@ -62,7 +63,7 @@ void Tilemap::Render(Display &display, const Vec2<int> &topLeft, const Vec2<int>
 
 void Tilemap::Render(Display &display, const Camera2D &camera)
 {
-    auto cameraSize = camera.ToWorld(GetWidth(), GetHeight());
+    auto cameraSize = camera.ToWorld(display.GetWidth(), display.GetHeight());
     auto cameraPos = Vec2<float>(camera.GetX() - cameraSize.x / 2, camera.GetY() - cameraSize.y / 2);
 
     // figure out what tiles to draw depending on camera movement, so we don't waste time trying to draw every tile, visible or not
@@ -74,6 +75,12 @@ void Tilemap::Render(Display &display, const Camera2D &camera)
     if (bottomRight.y > GetHeight()) bottomRight.y = GetHeight();
 
     Render(display, topLeft, bottomRight);
+}
+
+Bitmap Tilemap::GetTilesetBitmapById(int id) const
+{
+    Assert(id >= 0 && id < (int)tileset.size());
+    return tileset[id];
 }
 
 }

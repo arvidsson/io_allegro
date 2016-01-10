@@ -1,5 +1,5 @@
 #include "Application.hpp"
-
+#include "Debug.hpp"
 using namespace alcpp;
 
 namespace io
@@ -13,7 +13,13 @@ Core::Core()
 Application::Application()
 {
     eventQueue.Register(alcpp::Keyboard::GetEventSource());
+    eventQueue.Register(alcpp::Mouse::GetEventSource());
     done = false;
+}
+
+Application::~Application()
+{
+    resources.Unload();
 }
 
 Application::Application(int width, int height, bool fullscreen) : Application()

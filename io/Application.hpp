@@ -2,6 +2,7 @@
 
 #include "Time.hpp"
 #include "input/Input.hpp"
+#include "Resources.hpp"
 #include <alcpp.hpp>
 #include <allegro5/allegro.h>
 
@@ -18,6 +19,7 @@ class Application : public Core
 {
 public:
     Application();
+    virtual ~Application();
     Application(int width, int height, bool fullscreen = false);
     void Initialize(int width, int height, bool fullscreen = false);
     void Run();
@@ -64,6 +66,7 @@ protected:
     alcpp::Color clearColor = { 0, 0, 0 };
     Time time;
     Input input;
+    Resources resources;
 
 private:
     bool done = true;

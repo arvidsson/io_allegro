@@ -15,8 +15,8 @@ class Camera2D;
 class Tilemap
 {
 public:
-    Tilemap(int width, int height, int tileWidth, int tileHeight, alcpp::Bitmap tileSheet = alcpp::Bitmap(), int offset = 0);
-    void SetTileset(alcpp::Bitmap tileSheet, int offset = 0);
+    Tilemap(int width, int height, int tileWidth, int tileHeight, alcpp::Bitmap tilesheet = alcpp::Bitmap(), alcpp::Vec2<int> offset = { 0, 0 }, alcpp::Vec2<int> padding = { 0, 0 });
+    void SetTileset(alcpp::Bitmap tilesheet, alcpp::Vec2<int> offset = { 0, 0 }, alcpp::Vec2<int> padding = { 0, 0 });
 
     int GetWidth() const { return width; }
     int GetHeight() const { return height; }
@@ -33,10 +33,14 @@ public:
     void Render(alcpp::Display &display, const Camera2D& camera);
 
 private:
-    alcpp::Bitmap tileSheet;
+    alcpp::Bitmap GetTilesetBitmapById(int id) const;
+
+    alcpp::Bitmap tilesheet;
+    std::vector<alcpp::Bitmap> tileset;
     int width, height;
     int tileWidth, tileHeight;
-    int offset;
+    alcpp::Vec2<int> offset;
+    alcpp::Vec2<int> padding;
     std::vector<Tile> tiles;
 };
 
