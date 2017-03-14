@@ -4,7 +4,9 @@ Allegro 5 C++ rapid game prototyping framework in a single header-file.
 
 ## Usage
 
-Define `IO_IMPLEMENTATION` in *one* .cpp file before including `io.h`.
+* Define `IO_IMPLEMENTATION` in *one* .cpp file before including `io.h`.
+* Call `io::init()` before you do anything else.
+* [OPTIONAL] Use `IO_MAIN` and `IO_END` to log any thrown exceptions for you.
 
 ```cpp
 #define IO_IMPLEMENTATION
