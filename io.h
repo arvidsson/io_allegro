@@ -26,8 +26,8 @@
  */
 
 // MACROS
-#define IO_MAIN int main(int argc, char** argv) try
-#define IO_END catch(const std::exception& e) { ; }
+#define IO_BEGIN_MAIN int main(int argc, char** argv) try
+#define IO_END_MAIN catch(const std::exception& e) { ; }
 #define IO_FLAG(x) (1 << (x))
 // http://www.learncpp.com/cpp-tutorial/3-8a-bit-flags-and-bit-masks/
 #define IO_STRINGIFY(x) #x
