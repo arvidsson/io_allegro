@@ -9,13 +9,14 @@
 #include <allegro5/allegro_audio.h>
 #include <allegro5/allegro_acodec.h>
 #include <allegro5/allegro_native_dialog.h>
+#include <random>
 #include <vector>
 #include <array>
 #include <string>
+#include <sstream>
 #include <memory>
-#include <random>
 #include <ctime>
-
+#include <cstdarg>
 
 /*
  * ===============================================================
@@ -27,9 +28,12 @@
 
 // MACROS
 #define IO_BEGIN_MAIN int main(int argc, char** argv) try
-#define IO_END_MAIN catch(const std::exception& e) { ; }
+#define IO_END_MAIN catch(const std::exception& e) { al_show_native_message_box(al_get_current_display(), "Error", "Exception!", e.what(), 0, ALLEGRO_MESSAGEBOX_ERROR); }
+#define IO_THROW(...) (io::throw_exception(__FILE__, __LINE__, __VA_ARGS__))
+
 #define IO_FLAG(x) (1 << (x))
 // http://www.learncpp.com/cpp-tutorial/3-8a-bit-flags-and-bit-masks/
+
 #define IO_STRINGIFY(x) #x
 #define IO_TOSTRING(x) IO_STRINGIFY(x)
 #define IO_FILE_LINE __FILE__ ":" IO_TOSTRING(__LINE__)
@@ -38,6 +42,7 @@ namespace io
 {
 
 void init();
+void throw_exception(const char *file, int line, const char *format, ...);
 
 class Input;
 
@@ -248,9 +253,20 @@ namespace io
 
 void init()
 {
-    al_init();
-    al_install_keyboard();
-    al_install_mouse();
+    if (!al_init())
+    {
+        IO_THROW("Failed to initialize allegro");
+    }
+
+    if (!al_install_keyboard())
+    {
+        IO_THROW("Failed to install keyboard");
+    }
+
+    if (!al_install_mouse())
+    {
+        IO_THROW("Failed to install mouse");
+    }
     
     ALLEGRO_PATH* resource_path = al_get_standard_path(ALLEGRO_RESOURCES_PATH);
     al_change_directory(al_path_cstr(resource_path, ALLEGRO_NATIVE_PATH_SEP));
@@ -263,6 +279,19 @@ void init()
     al_install_audio();
     al_init_acodec_addon();
     al_reserve_samples(32);
+}
+
+void throw_exception(const char *file, int line, const char *format, ...)
+{
+    char buffer[4096];
+    va_list ap;
+    va_start(ap, format);
+    vsprintf_s(buffer, format, ap);
+    va_end(ap);
+
+    std::stringstream ss;
+    ss << buffer << " (" << file << ":" << line << ")";
+    throw std::runtime_error(ss.str());
 }
 
 Game::Game(std::string title, int width, int height, bool fullscreen)
