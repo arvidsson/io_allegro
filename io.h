@@ -30,6 +30,7 @@
 #define IO_BEGIN_MAIN int main(int argc, char** argv) try
 #define IO_END_MAIN catch(const std::exception& e) { al_show_native_message_box(al_get_current_display(), "Error", "Exception!", e.what(), 0, ALLEGRO_MESSAGEBOX_ERROR); }
 #define IO_THROW(...) (io::throw_exception(__FILE__, __LINE__, __VA_ARGS__))
+#define IO_CHECK(cond, msg) if (!cond) { IO_THROW(msg); }
 
 #define IO_FLAG(x) (1 << (x))
 // http://www.learncpp.com/cpp-tutorial/3-8a-bit-flags-and-bit-masks/
@@ -253,32 +254,21 @@ namespace io
 
 void init()
 {
-    if (!al_init())
-    {
-        IO_THROW("Failed to initialize allegro");
-    }
-
-    if (!al_install_keyboard())
-    {
-        IO_THROW("Failed to install keyboard");
-    }
-
-    if (!al_install_mouse())
-    {
-        IO_THROW("Failed to install mouse");
-    }
+    IO_CHECK(al_init(), "Failed to initialize allegro");
+    IO_CHECK(al_install_keyboard(), "Failed to install keyboard");
+    IO_CHECK(al_install_mouse(), "Failed to install mouse");
     
     ALLEGRO_PATH* resource_path = al_get_standard_path(ALLEGRO_RESOURCES_PATH);
     al_change_directory(al_path_cstr(resource_path, ALLEGRO_NATIVE_PATH_SEP));
     al_destroy_path(resource_path);
     
-    al_init_primitives_addon();
-    al_init_image_addon();
-    al_init_font_addon();
-    al_init_ttf_addon();
-    al_install_audio();
-    al_init_acodec_addon();
-    al_reserve_samples(32);
+    IO_CHECK(al_init_primitives_addon(), "Failed to initialize primitives addon");
+    IO_CHECK(al_init_image_addon(), "Failed to initialize image addon");
+    IO_CHECK(al_init_font_addon(), "Failed to initialize font addon");
+    IO_CHECK(al_init_ttf_addon(), "Failed to initialize ttf addon");
+    IO_CHECK(al_install_audio(), "Failed to install audio addon");
+    IO_CHECK(al_init_acodec_addon(), "Failed to initialize acodec addon");
+    IO_CHECK(al_reserve_samples(32), "Failed to reserve samples");
 }
 
 void throw_exception(const char *file, int line, const char *format, ...)
@@ -288,7 +278,6 @@ void throw_exception(const char *file, int line, const char *format, ...)
     va_start(ap, format);
     vsprintf_s(buffer, format, ap);
     va_end(ap);
-
     std::stringstream ss;
     ss << buffer << " (" << file << ":" << line << ")";
     throw std::runtime_error(ss.str());
