@@ -1,2 +1,2 @@
 # io
-Allegro 5 C++ game/application framework
+Allegro 5 C++ rapid game prototyping framework in a single header-file.
