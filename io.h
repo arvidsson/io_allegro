@@ -15,6 +15,7 @@
 #include <string>
 #include <sstream>
 #include <memory>
+#include <cmath>
 #include <ctime>
 #include <cstdarg>
 
@@ -27,8 +28,17 @@
  */
 
 // MACROS
-#define IO_BEGIN_MAIN int main(int argc, char** argv) try
-#define IO_END_MAIN catch(const std::exception& e) { al_show_native_message_box(al_get_current_display(), "Error", "Exception!", e.what(), 0, ALLEGRO_MESSAGEBOX_ERROR); }
+#define IO(T) \
+int main(int argc, char** argv) try\
+{\
+    io::init();\
+    auto game = std::make_unique<T>();\
+    game->run();\
+}\
+catch(const std::exception& e)\
+{\
+    al_show_native_message_box(al_get_current_display(), "Error", "Exception!", e.what(), 0, ALLEGRO_MESSAGEBOX_ERROR);\
+}
 #define IO_THROW(...) (io::throw_exception(__FILE__, __LINE__, __VA_ARGS__))
 #define IO_CHECK(cond, msg) if (!cond) { IO_THROW(msg); }
 
@@ -42,6 +52,295 @@
 namespace io
 {
 
+/*
+ * ===============================================================
+ *
+ *                          MATH
+ *
+ * ===============================================================
+ */
+
+template <class Derived, typename T, int N>
+class VectorBase;
+
+template <class Derived, typename T>
+class VectorBase<Derived, T, 2>
+{
+protected:
+    T values[2];
+    VectorBase(T v0, T v1) : values{v0, v1} {}
+    
+    bool operator==(const Derived& v) const 
+    {
+        return values[0] == v.values[0] && values[1] == v.values[1];
+    }
+    
+    bool operator!=(const Derived& v) const 
+    {
+        return !(operator==(v));
+    }
+    
+    bool is_equal(const Derived& v, T epsilon = 0.001) const 
+    {
+        return (std::abs(values[0] - v.values[0]) < epsilon) && (std::abs(values[1] - v.values[1]) < epsilon);
+    }
+    
+    friend Derived operator+(const Derived& v1, const Derived& v2)
+    {
+        return Derived{v1.values[0] + v2.values[0], v1.values[1] + v2.values[1]};
+    }
+
+    Derived& operator+=(const Derived& v)
+    {
+        values[0] += v.values[0];
+        values[1] += v.values[1];
+        return static_cast<Derived&>(*this);
+    }
+    
+    friend Derived operator-(const Derived& v1, const Derived& v2)
+    {
+        return Derived{v1.values[0] - v2.values[0], v1.values[1] - v2.values[1]};
+    }
+
+    Derived operator-() const
+    {
+        return Derived{-values[0], -values[1]};
+    }
+
+    Derived& operator-=(const Derived& v)
+    {
+        values[0] -= v.values[0];
+        values[1] -= v.values[1];
+        return static_cast<Derived&>(*this);
+    }
+
+    Derived operator*(T f) const
+    {
+        return Derived{values[0] * f, values[1] * f};
+    }
+
+    Derived& operator*=(T f)
+    {
+        values[0] *= f;
+        values[1] *= f;
+        return static_cast<Derived&>(*this);
+    }
+
+    Derived operator/(T f) const
+    {
+        return Derived{values[0] / f, values[1] / f};
+    }
+
+    Derived& operator/=(T f)
+    {
+        values[0] /= f;
+        values[1] /= f;
+        return static_cast<Derived&>(*this);
+    }
+};
+
+template <typename T>
+class Vector : public VectorBase<Vector<T>, T, 2>
+{
+    using Base = VectorBase<Vector<T>, T, 2>;
+    
+public:
+    T& x;
+    T& y;
+    
+    Vector(T x = T(), T y = T()) : Base(x, y), x(Base::values[0]), y(Base::values[1]) {}
+    Vector& operator=(const Vector& v) { x = v.x; y = v.y; return *this; }
+    
+    using Base::operator==;
+    using Base::operator!=;
+    using Base::is_equal;
+    using Base::operator+=;
+    using Base::operator-;
+    using Base::operator-=;
+    using Base::operator*;
+    using Base::operator*=;
+    using Base::operator/;
+    using Base::operator/=;
+    
+    T dot_product(const Vector& v) const
+    {
+        return x * v.x + y * v.y;
+    }
+    
+    T cross_product(const Vector& v) const
+    {
+        return x * v.y - y * v.x;
+    }
+    
+    T length() const
+    {
+        return std::sqrt(x * x + y * y);
+    }
+    
+    T length_squared() const
+    {
+        return x * x + y * y;
+    }
+    
+    void normalize()
+    {
+        T l = length();
+        if (l) {
+            x /= l;
+            y /= l;
+        }
+    }
+
+    Vector normalized() const
+    {
+        T l = length();
+        return l ? Vector{x / l, y / l} : Vector();
+    }
+
+    Vector polar(T angle, T length) const
+    {
+        return Vector{length * std::cos(angle), length * std::sin(angle)};
+    }
+
+    T magnitude() const
+    {
+        return length();
+    }
+
+    T direction() const
+    {
+        return std::atan2(y, x);
+    }
+
+    T angle() const
+    {
+        return direction();
+    }
+
+    T distance_to(const Vector& v)
+    {
+        T dx = v.x - x;
+        T dy = v.y - y;
+        return std::sqrt(dx * dx + dy * dy);
+    }
+
+    std::string to_string() const
+    {
+        std::stringstream ss;
+        ss << "(" << x << "," << y << ")";
+        return ss.str();
+    }
+};
+
+using Vector2i = Vector<int>;
+using Vector2f = Vector<float>;
+ 
+template <typename T>
+class Size : public VectorBase<Vector<T>, T, 2>
+{
+    using Base = VectorBase<Vector<T>, T, 2>;
+    
+public:
+    T& w;
+    T& h;
+    
+    Size(T w = T(), T h = T()) : Base(w, h), w(Base::values[0]), h(Base::values[1]) {}
+    Size& operator=(const Size& s) { w = s.w; h = s.h; return *this; }
+    
+    using Base::operator==;
+    using Base::operator!=;
+    using Base::operator+=;
+    using Base::operator-;
+    using Base::operator-=;
+    using Base::operator*;
+    using Base::operator*=;
+    using Base::operator/;
+    using Base::operator/=;
+};
+
+using Size2i = Size<int>;
+using Size2f = Size<float>;
+
+template <typename T>
+class Region
+{
+public:
+    Vector<T> pos;
+    Size<T> size;
+    
+    Region(T x, T y, T w, T h) : pos(x, y), size(w, h) {}
+    Region(Vector<T> pos, Size<T> size) : pos(pos), size(size) {}
+
+    T x() const { return pos.x; }
+    T y() const { return pos.y; }
+    T w() const { return size.w; }
+    T h() const { return size.h; }
+    T left() const { return x(); }
+    T right() const { return x() + w(); }
+    T top() const { return y(); }
+    T bottom() const { return y() + h(); }
+    Vector<T> top_left() const { return Vector<T>(left(), top()); }
+    Vector<T> top_right() const { return Vector<T>(right(), top()); }
+    Vector<T> bottom_left() const { return Vector<T>(left(), bottom()); }
+    Vector<T> bottom_right() const { return Vector<T>(right(), bottom()); }
+    T center_x() const { return x() + w() / 2; }
+    T center_y() const { return y() + h() / 2; }
+    Vector<T> center() const { return Vector<T>(center_x(), center_y()); }
+    
+    bool contains(T x, T y) const
+    {
+        return !(x < left() || x > right() || y < top() || y > bottom());
+    }
+    
+    bool contains(const Vector<T>& v) const
+    {
+        return contains(v.x, v.y);
+    }
+    
+    bool contains(const Region<T>& r) const
+    {
+        return contains(r.left(), r.top()) && contains(r.right(), r.bottom());
+    }
+    
+    bool intersects(T x0, T y0, T x1, T y1) const
+    {
+        return !(x0 > right() || x1 < left() || y0 > bottom() || y1 < top());
+    }
+    
+    bool intersects(const Region<T>& r) const
+    {
+        return intersects(r.left(), r.top(), r.right(), r.bottom());
+    }
+    
+    bool intersects(const Vector<T>& v, T radius) const
+    {
+        return false;
+    }
+    
+    std::string to_string() const
+    {
+        std::stringstream ss;
+        ss << "((" << left() << "," + top() << "),(" << right() << "," << bottom() << "))";
+        return ss.str();
+    }
+};
+
+using Region2f = Region<float>;
+using Region2i = Region<int>;
+
+class Random
+{
+public:
+    Random(unsigned int seed = (unsigned int)time(0));
+    int get_next_int(int min, int max);
+    float get_next_float(float min, float max);
+    bool one_in(int chance);
+    int roll_dice(int number, int sides);
+
+private:
+    std::mt19937 rng;
+};
+ 
 void init();
 void throw_exception(const char *file, int line, const char *format, ...);
 
@@ -50,35 +349,34 @@ class Input;
 class Game
 {
 public:
-    Game(std::string title, int width, int height, bool fullscreen);
+    Game(std::string title, Size2i window_size, bool fullscreen);
     virtual ~Game();
     void run();
-    void quit();
+    void quit() { done = true; }
     virtual void update(const Input& input) = 0;
     virtual void render() = 0;
-    int get_width() const;
-    int get_height() const;
+    Size2i get_window_size() const { return window_size; }
 private:
     bool done = false;
     bool paused = false;
     ALLEGRO_EVENT_QUEUE* queue;
     ALLEGRO_TIMER* timer;
     ALLEGRO_DISPLAY* display;
-    int width, height;
+    Size2i window_size;
 };
 
 class Input
 {
 public:
-    bool is_key_down(int key) const;
-    bool is_key_pressed(int key) const;
-    bool is_key_released(int key) const;
+    bool is_key_down(int key) const { return keyboard.keys[key].down; }
+    bool is_key_pressed(int key) const { return keyboard.keys[key].pressed; }
+    bool is_key_released(int key) const { return keyboard.keys[key].released; }
     
-    bool is_mouse_button_down(int button) const;
-    bool is_mouse_button_pressed(int button) const;
-    bool is_mouse_button_released(int button) const;
-    int get_mouse_x() const;
-    int get_mouse_y() const;
+    bool is_mouse_button_down(int button) const { return mouse.buttons[button].down; }
+    bool is_mouse_button_pressed(int button) const { return mouse.buttons[button].pressed; }
+    bool is_mouse_button_released(int button) const { return mouse.buttons[button].released; }
+    int get_mouse_x() const { return mouse.x; }
+    int get_mouse_y() const { return mouse.y; }
     
     static int wait_for_keypress();
     static void wait_for_any();
@@ -103,136 +401,7 @@ private:
         int old_x, old_y, old_z;
     } mouse;
     
-    friend Game;
-};
-
-template <typename T>
-class Vec2
-{
-public:
-    T x, y;
-
-    friend Vec2<T> operator+(const Vec2<T> &v1, const Vec2<T> &v2)
-    {
-        return Vec2<T>{v1.x + v2.x, v1.y + v2.y};
-    }
-
-    Vec2<T>& operator+=(const Vec2<T> &v)
-    {
-        x += v.x;
-        y += v.y;
-        return *this;
-    }
-
-    friend Vec2<T> operator-(const Vec2<T> &v1, const Vec2<T> &v2)
-    {
-        return Vec2<T>{v1.x - v2.x, v1.y - v2.y};
-    }
-
-    Vec2<T> operator-() const
-    {
-        return Vec2<T>{-x, -y};
-    }
-
-    Vec2<T>& operator-=(const Vec2<T> &v)
-    {
-        x -= v.x;
-        y -= v.y;
-        return *this;
-    }
-
-    Vec2<T> operator*(T f) const
-    {
-        return Vec2<T>{x * f, y * f};
-    }
-
-    Vec2<T>& operator*=(T f)
-    {
-        x *= f;
-        y *= f;
-        return *this;
-    }
-
-    Vec2<T> operator/(T f) const
-    {
-        return Vec2<T>{x / f, y / f};
-    }
-
-    Vec2<T>& operator/=(T f)
-    {
-        x /= f;
-        y /= f;
-        return *this;
-    }
-};
-
-using Vec2f = Vec2<float>;
-using Vec2i = Vec2<int>;
-
-template <typename T>
-class Rect
-{
-public:
-    T x, y, w, h;
-
-    T left() const { return x; }
-    T right() const{ return x + width; }
-    T top() const { return y; }
-    T bottom() const { return y + height; }
-
-    bool contains(T x, T y) const
-    {
-        return !(x < left() || x > right() || y < top() || y > bottom());
-    }
-
-    bool contains(const Vec2<T>& point) const
-    {
-        return contains(point.x, point.y);
-    }
-
-    bool contains(const Rect<T>& r) const
-    {
-        return contains(r.left(), r.top()) && contains(r.right(), r.bottom());
-    }
-
-    bool intersects(T l, T t, T r, T b) const
-    {
-        return !(l > right() || r < left() || t > bottom() || b < top());
-    }
-
-    bool intersects(const Rect<T>& r) const
-    {
-        return intersects(r.left(), r.top(), r.right(), r.bottom());
-    }
-
-    bool intersects(const Vec2<T>& point, T radius)
-    {
-        auto dist_x = std::abs(point.x - (x - w / 2));
-        auto dist_y = std::abs(point.y - (y - h / 2));
-        if (dist_x > (w / 2 + radius)) { return false; }
-        if (dist_y > (h / 2 + radius)) { return false; }
-        if (dist_x <= w / 2) { return true; }
-        if (dist_y <= h / 2) { return true; }
-        auto dx = dist_x - w / 2;
-        auto dy = dist_y - h / 2;
-        return (dx*dx + dy*dy <= (radius*radius));
-    }
-};
-
-using Rectf = Rect<float>;
-using Recti = Rect<int>;
-
-class Random
-{
-public:
-    Random(unsigned int seed = (unsigned int)time(0));
-    int get_next_int(int min, int max);
-    float get_next_float(float min, float max);
-    bool one_in(int chance);
-    int roll_dice(int number, int sides);
-
-private:
-    std::mt19937 rng;
+    friend class Game;
 };
 
 }
@@ -283,19 +452,18 @@ void throw_exception(const char *file, int line, const char *format, ...)
     throw std::runtime_error(ss.str());
 }
 
-Game::Game(std::string title, int width, int height, bool fullscreen)
+Game::Game(std::string title, Size2i window_size, bool fullscreen)
 {
     queue = al_create_event_queue();
     timer = al_create_timer(1.0 / 60);
     fullscreen ? al_set_new_display_flags(ALLEGRO_FULLSCREEN_WINDOW) : al_set_new_display_flags(ALLEGRO_WINDOWED);
-    display = al_create_display(width, height);
+    display = al_create_display(window_size.w, window_size.h);
     al_set_window_title(display, title.c_str());
     al_register_event_source(queue, al_get_keyboard_event_source());
     al_register_event_source(queue, al_get_mouse_event_source());
     al_register_event_source(queue, al_get_timer_event_source(timer));
     al_register_event_source(queue, al_get_display_event_source(display));
-    this->width = width;
-    this->height = height;
+    this->window_size = window_size;
 }
     
 Game::~Game()
@@ -396,61 +564,6 @@ void Game::run()
             al_flip_display();
         }
     }
-}
-
-void Game::quit()
-{
-    done = true;
-}
-
-int Game::get_width() const
-{
-    return width;
-}
-
-int Game::get_height() const
-{
-    return height;
-}
-
-bool Input::is_key_down(int key) const
-{
-    return keyboard.keys[key].down;
-}
-
-bool Input::is_key_pressed(int key) const
-{
-    return keyboard.keys[key].pressed;
-}
-
-bool Input::is_key_released(int key) const
-{
-    return keyboard.keys[key].released;
-}
-
-bool Input::is_mouse_button_down(int button) const
-{
-    return mouse.buttons[button].down;
-}
-
-bool Input::is_mouse_button_pressed(int button) const
-{
-    return mouse.buttons[button].pressed;
-}
-
-bool Input::is_mouse_button_released(int button) const
-{
-    return mouse.buttons[button].released;
-}
-
-int Input::get_mouse_x() const
-{
-    return mouse.x;
-}
-
-int Input::get_mouse_y() const
-{
-    return mouse.y;
 }
 
 int Input::wait_for_keypress()

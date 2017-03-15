@@ -5,14 +5,14 @@ Allegro 5 C++ rapid game prototyping framework in a single header-file.
 ## Usage
 
 * Define `IO_IMPLEMENTATION` in *one* .cpp file before including `io.h`.
-* Call `io::init()` before you do anything else.
-* [OPTIONAL] Use `IO_BEGIN_MAIN` and `IO_END_MAIN` to log any thrown exceptions for you.
+* Derive from `io::Game`.
+* Use `IO()` macro to run the game .
 
 ```cpp
 #define IO_IMPLEMENTATION
 #include "io.h"
 
-class Skeleton : public io::Game
+class Example : public io::Game
 {
 public:
     void update(const io::Input& input) override
@@ -29,13 +29,7 @@ public:
     }
 };
 
-IO_BEGIN_MAIN
-{
-    io::init();
-    auto game = std::make_unique<Skeleton>();
-    game->run();
-}
-IO_END_MAIN
+IO(Example)
 ```
 
 ## License
