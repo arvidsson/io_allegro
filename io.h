@@ -671,12 +671,6 @@ private:
 
 // GRAPHICS
 
-std::string load_file(std::string filename);
-GLuint make_shader(GLenum type, std::string source);
-GLuint load_shader(GLenum type, std::string filename);
-GLuint make_program(GLuint shader1, GLuint shader2);
-GLuint load_program(const char *path1, const char *path2);
-
 class Color : public VectorBase<Color, float, 4>
 {
     using Base = VectorBase<Color, float, 4>;
@@ -690,7 +684,7 @@ public:
     Color(float r = 0.0f, float g = 0.0f, float b = 0.0f, float a = 0.0f) : Base(r, g, b, a), r(Base::values[0]), g(Base::values[1]), b(Base::values[2]), a(Base::values[3]) {}
     Color(int r, int g, int b, int a) : Base(r / 255.0f, g / 255.0f, b / 255.0f, a / 255.0f), r(Base::values[0]), g(Base::values[1]), b(Base::values[2]), a(Base::values[3]) {}
     Color& operator=(const Color& c) { r = c.r; g = c.g; b = c.b; a = c.a; return *this; }
-    Color(const ALLEGRO_COLOR& color) { operator=(color); }
+    Color(const ALLEGRO_COLOR& color) : Color() { operator=(color); }
     Color& operator=(const ALLEGRO_COLOR& color) { al_unmap_rgba_f(color, &r, &g, &b, &a); return *this; }
     
     using Base::operator==;
@@ -712,7 +706,7 @@ public:
     std::string to_string() const
     {
         std::stringstream ss;
-        ss << "(" << r << "," << g << "," << b << "," a << ")";
+        ss << "(" << r << "," << g << "," << b << "," << a << ")";
         return ss.str();
     }
 };
@@ -750,9 +744,8 @@ public:
     virtual ~Game();
     void run();
     void quit() { done = true; }
-    virtual void update(const Input& input) = 0;
+    virtual void update() = 0;
     virtual void render() = 0;
-    Size2i get_window_size() const { return window_size; }
 private:
     bool done = false;
     bool paused = false;
@@ -761,12 +754,13 @@ private:
     ALLEGRO_DISPLAY* display;
 };
 
-class GameServices()
+class GameServices
 {
 public:
-    GameServices& instance() { static GameServices gs; return gs; }
+    static GameServices& instance() { static GameServices gs; return gs; }
     Size2i window_size;
     Input input;
+    Random random;
 };
 
 } // namespace io
@@ -821,7 +815,7 @@ Transform::Transform(const ALLEGRO_TRANSFORM &transform)
     al_copy_transform(&t, &transform);
 }
 
-Transform::Transform& operator=(const ALLEGRO_TRANSFORM &transform)
+Transform& Transform::operator=(const ALLEGRO_TRANSFORM &transform)
 {
     al_copy_transform(&t, &transform);
     return *this;
@@ -952,7 +946,7 @@ Bitmap Resources::get_bitmap(std::string filename)
     Bitmap bitmap = load_bitmap(filename);
     if (!bitmap)
     {
-        throw_exception("Failed to load bitmap: %s", filename.c_str());
+        IO_THROW("Failed to load bitmap: %s", filename.c_str());
     }
 
     bitmaps[filename] = bitmap;
@@ -968,8 +962,8 @@ std::vector<Bitmap> Resources::get_sub_bitmaps(std::string filename, int width, 
     Bitmap bitmap = get_bitmap(filename);
     std::vector<Bitmap> sub_bmps;
 
-    int cols = bitmap.get_width() / width;
-    int rows = bitmap.get_height() / height;
+    int cols = al_get_bitmap_width(bitmap.get()) / width;
+    int rows = al_get_bitmap_height(bitmap.get()) / height;
 
     for (int i = 0; i < cols; i++)
     {
@@ -980,7 +974,7 @@ std::vector<Bitmap> Resources::get_sub_bitmaps(std::string filename, int width, 
             {
                 IO_THROW("Failed to create sub-bitmaps for: %s", filename.c_str());
             }
-            sub_bmps.push_back(sub_bmps);
+            sub_bmps.push_back(sub_bitmap);
         }
     }
 
@@ -1043,78 +1037,6 @@ Music Resources::get_music(std::string filename)
     return song;
 }
 
-std::string load_file(std::string filename)
-{
-    // TODO: use allegro
-    FILE *file = fopen(path, "rb");
-    fseek(file, 0, SEEK_END);
-    int length = ftell(file);
-    rewind(file);
-    char *data = calloc(length + 1, sizeof(char));
-    fread(data, 1, length, file);
-    fclose(file);
-    return data;
-}
-
-GLuint make_shader(GLenum type, std::string source)
-{
-    GLuint shader = glCreateShader(type);
-    glShaderSource(shader, 1, &source.c_str(), NULL);
-    glCompileShader(shader);
-    GLint status;
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
-    if (status == GL_FALSE)
-    {
-        GLint length;
-        glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &length);
-        GLchar *info = calloc(length, sizeof(GLchar));
-        glGetShaderInfoLog(shader, length, NULL, info);
-        fprintf(stderr, "glCompileShader failed:\n%s\n", info);
-        free(info);
-    }
-    return shader;
-}
-
-GLuint load_shader(GLenum type, std::string filename)
-{
-    std::string source = load_file(filename);
-    GLuint result = make_shader(type, source);
-    free(data);
-    return result;
-}
-
-GLuint make_program(GLuint vertex_shader, GLuint fragment_shader)
-{
-    GLuint program = glCreateProgram();
-    glAttachShader(program, vertex_shader);
-    glAttachShader(program, fragment_shader);
-    glLinkProgram(program);
-    GLint status;
-    glGetProgramiv(program, GL_LINK_STATUS, &status);
-    if (status == GL_FALSE)
-    {
-        GLint length;
-        glGetProgramiv(program, GL_INFO_LOG_LENGTH, &length);
-        GLchar *info = calloc(length, sizeof(GLchar));
-        glGetProgramInfoLog(program, length, NULL, info);
-        fprintf(stderr, "glLinkProgram failed: %s\n", info);
-        free(info);
-    }
-    glDetachShader(program, vertex_shader);
-    glDetachShader(program, fragment_shader);
-    glDeleteShader(vertex_shader);
-    glDeleteShader(fragment_shader);
-    return program;
-}
-
-GLuint load_program(std::string vertex_shader_filename, std::string fragment_shader_filename)
-{
-    GLuint vertex_shader = load_shader(GL_VERTEX_SHADER, vertex_shader_filename);
-    GLuint fragment_shader = load_shader(GL_FRAGMENT_SHADER, fragment_shader_filename);
-    GLuint program = make_program(vertex_shader, fragment_shader);
-    return program;
-}
-
 Game::Game(std::string title, Size2i window_size, bool fullscreen)
 {
     queue = al_create_event_queue();
@@ -1153,7 +1075,7 @@ void Game::run()
                 redraw = true;
                 if (!paused)
                 {
-                    update(input);
+                    update();
                 }
                 
                 // clear input state
