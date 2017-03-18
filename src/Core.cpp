@@ -1,5 +1,7 @@
 #include "Core.h"
-using namespace io;
+
+namespace io
+{
 
 /*BEGIN*/
 
@@ -8,11 +10,11 @@ void init()
     IO_CHECK(al_init(), "Failed to initialize allegro");
     IO_CHECK(al_install_keyboard(), "Failed to install keyboard");
     IO_CHECK(al_install_mouse(), "Failed to install mouse");
-    
+
     ALLEGRO_PATH* resource_path = al_get_standard_path(ALLEGRO_RESOURCES_PATH);
     al_change_directory(al_path_cstr(resource_path, ALLEGRO_NATIVE_PATH_SEP));
     al_destroy_path(resource_path);
-    
+
     IO_CHECK(al_init_primitives_addon(), "Failed to initialize primitives addon");
     IO_CHECK(al_init_image_addon(), "Failed to initialize image addon");
     IO_CHECK(al_init_font_addon(), "Failed to initialize font addon");
@@ -35,3 +37,5 @@ void throw_exception(const char *file, int line, const char *format, ...)
 }
 
 /*END*/
+
+} // namespace io

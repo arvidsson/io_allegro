@@ -1,5 +1,24 @@
 #pragma once
 
+#include <allegro5/allegro.h>
+#include <allegro5/allegro_primitives.h>
+#include <allegro5/allegro_image.h>
+#include <allegro5/allegro_font.h>
+#include <allegro5/allegro_ttf.h>
+#include <allegro5/allegro_audio.h>
+#include <allegro5/allegro_acodec.h>
+#include <allegro5/allegro_native_dialog.h>
+#include <random>
+#include <vector>
+#include <array>
+#include <unordered_map>
+#include <string>
+#include <sstream>
+#include <memory>
+#include <cmath>
+#include <ctime>
+#include <cstdarg>
+
 namespace io
 {
 

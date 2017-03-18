@@ -3,11 +3,27 @@
 header_files = [
     "Core.h",
     "Math.h",
-    "VectorBase.h"
+    "VectorBase.h",
+    "Vector.h",
+    "Size.h",
+    "Region.h",
+    "Transform.h",
+    "Random.h",
+    "Input.h",
+    "Resources.h",
+    "Color.h",
+    "Camera2D.h",
+    "Game.h",
+    "GameServices.h"
 ]
 
 source_files = [
-    "Core.cpp"
+    "Core.cpp",
+    "Transform.cpp",
+    "Random.cpp",
+    "Input.cpp",
+    "Resources.cpp",
+    "Game.cpp"
 ]
 
 def process_file(path):
