@@ -1,3 +1,7 @@
+// io 0.1 - c++ rapid game prototyping framework using Allegro 5
+// Copyright 2017 Pär Arvidsson. All rights reserved.
+// Licensed under the MIT license (https://github.com/arvidsson/io/blob/master/LICENSE).
+
 #ifndef IO_HEADER
 #define IO_HEADER
 
@@ -12,6 +16,7 @@
 #include <random>
 #include <vector>
 #include <array>
+#include <unordered_map>
 #include <string>
 #include <sstream>
 #include <memory>
@@ -19,15 +24,14 @@
 #include <ctime>
 #include <cstdarg>
 
-/*
- * ===============================================================
- *
- *                          INTERFACE
- *
- * ===============================================================
- */
+// API
 
-// MACROS
+namespace io
+{
+
+// CORE
+
+#define io() io::GameServices::instance()
 #define IO(T) \
 int main(int argc, char** argv) try\
 {\
@@ -42,23 +46,88 @@ catch(const std::exception& e)\
 #define IO_THROW(...) (io::throw_exception(__FILE__, __LINE__, __VA_ARGS__))
 #define IO_CHECK(cond, msg) if (!cond) { IO_THROW(msg); }
 
-#define IO_FLAG(x) (1 << (x))
-// http://www.learncpp.com/cpp-tutorial/3-8a-bit-flags-and-bit-masks/
+void init();
+void throw_exception(const char *file, int line, const char *format, ...);
 
-#define IO_STRINGIFY(x) #x
-#define IO_TOSTRING(x) IO_STRINGIFY(x)
-#define IO_FILE_LINE __FILE__ ":" IO_TOSTRING(__LINE__)
+// MATH, BASIC TYPES and RANDOM
 
-namespace io
+template <typename T>
+class Math
 {
+public:
+    static const T almost_zero;
+    static const T pi;
+    static const T two_pi;
+    static const T pi_over_two;
+    static const T pi_over_four;
+    static const T deg_to_rad;
+    static const T rad_to_deg;
+    static const T e;
 
-/*
- * ===============================================================
- *
- *                          MATH
- *
- * ===============================================================
- */
+    static T to_radians(const T degrees)
+    {
+        return degrees * deg_to_rad;
+    }
+
+    static T to_degrees(const T radians)
+    {
+        return radians * rad_to_deg;
+    }
+
+    static T round(const T value)
+    {
+        return value > 0.0 ? std::floor(value + static_cast<T>(0.5)) : std::ceil(value - static_cast<T>(0.5));
+    }
+
+    static bool is_zero(const T value, const T epsilon = almost_zero)
+    {
+        return std::abs(value) <= epsilon;
+    }
+
+    static bool is_positive(const T value, const T epsilon = almost_zero)
+    {
+        return value > epsilon;
+    }
+
+    static bool is_negative(const T value, const T epsilon = almost_zero)
+    {
+        return value < -epsilon;
+    }
+
+    static bool is_equal(const T x1, const T x2, const T epsilon = almost_zero)
+    {
+        return std::abs(x1 - x2) < epsilon;
+    }
+
+    static bool is_greater_than(const T x1, const T x2, const T epsilon = almost_zero)
+    {
+        return x1 > (x2 + epsilon);
+    }
+
+    static bool is_less_than(const T x1, const T x2, const T epsilon = almost_zero)
+    {
+        return x1 < (x2 - epsilon);
+    }
+
+    static bool is_greater_than_or_equal(const T x1, const T x2, const T epsilon = almost_zero)
+    {
+        return !is_less_than(x1, x2, epsilon);
+    }
+
+    static bool is_less_than_or_equal(const T x1, const T x2, const T epsilon = almost_zero)
+    {
+        return !is_greater_than(x1, x2, epsilon);
+    }
+};
+
+template <typename T> const T Math<T>::almost_zero = static_cast<T>(0.001);
+template <typename T> const T Math<T>::pi = static_cast<T>(3.141592653589793);
+template <typename T> const T Math<T>::two_pi = static_cast<T>(2.0) * pi;
+template <typename T> const T Math<T>::pi_over_two = pi / static_cast<T>(2.0);
+template <typename T> const T Math<T>::pi_over_four = pi / static_cast<T>(4.0);
+template <typename T> const T Math<T>::deg_to_rad = pi / static_cast<T>(180.0);
+template <typename T> const T Math<T>::rad_to_deg = static_cast<T>(180.0) / pi;
+template <typename T> const T Math<T>::e = static_cast<T>(2.718281828459045);
 
 template <class Derived, typename T, int N>
 class VectorBase;
@@ -82,7 +151,7 @@ protected:
     
     bool is_equal(const Derived& v, T epsilon = 0.001) const 
     {
-        return (std::abs(values[0] - v.values[0]) < epsilon) && (std::abs(values[1] - v.values[1]) < epsilon);
+        return Math<T>::is_equal(values[0], v.values[0], epsilon) && Math<T>::is_equal(values[1], v.values[1], epsilon);
     }
     
     friend Derived operator+(const Derived& v1, const Derived& v2)
@@ -135,6 +204,170 @@ protected:
     {
         values[0] /= f;
         values[1] /= f;
+        return static_cast<Derived&>(*this);
+    }
+};
+
+template <class Derived, typename T>
+class VectorBase<Derived, T, 3>
+{
+protected:
+    T values[3];
+    VectorBase(T v0, T v1, T v2) : values{v0, v1, v2} {}
+    
+    bool operator==(const Derived& v) const 
+    {
+        return values[0] == v.values[0] && values[1] == v.values[1] && values[2] == v.values[2];
+    }
+    
+    bool operator!=(const Derived& v) const 
+    {
+        return !(operator==(v));
+    }
+    
+    bool is_equal(const Derived& v, T epsilon = 0.001) const 
+    {
+        return Math<T>::is_equal(values[0], v.values[0], epsilon) && Math<T>::is_equal(values[1], v.values[1], epsilon && Math<T>::is_equal(values[2], v.values[2], epsilon));
+    }
+    
+    friend Derived operator+(const Derived& v1, const Derived& v2)
+    {
+        return Derived{v1.values[0] + v2.values[0], v1.values[1] + v2.values[1], v1.values[2] + v2.values[2]};
+    }
+
+    Derived& operator+=(const Derived& v)
+    {
+        values[0] += v.values[0];
+        values[1] += v.values[1];
+        values[2] += v.values[2];
+        return static_cast<Derived&>(*this);
+    }
+    
+    friend Derived operator-(const Derived& v1, const Derived& v2)
+    {
+        return Derived{v1.values[0] - v2.values[0], v1.values[1] - v2.values[1], v1.values[2] - v2.values[2]};
+    }
+
+    Derived operator-() const
+    {
+        return Derived{-values[0], -values[1], -values[2]};
+    }
+
+    Derived& operator-=(const Derived& v)
+    {
+        values[0] -= v.values[0];
+        values[1] -= v.values[1];
+        values[2] -= v.values[2];
+        return static_cast<Derived&>(*this);
+    }
+
+    Derived operator*(T f) const
+    {
+        return Derived{values[0] * f, values[1] * f, values[2] * f};
+    }
+
+    Derived& operator*=(T f)
+    {
+        values[0] *= f;
+        values[1] *= f;
+        values[2] *= f;
+        return static_cast<Derived&>(*this);
+    }
+
+    Derived operator/(T f) const
+    {
+        return Derived{values[0] / f, values[1] / f, values[2] / f};
+    }
+
+    Derived& operator/=(T f)
+    {
+        values[0] /= f;
+        values[1] /= f;
+        values[2] /= f;
+        return static_cast<Derived&>(*this);
+    }
+};
+
+template <class Derived, typename T>
+class VectorBase<Derived, T, 4>
+{
+protected:
+    T values[4];
+    VectorBase(T v0, T v1, T v2, T v3) : values{v0, v1, v2, v3} {}
+    
+    bool operator==(const Derived& v) const 
+    {
+        return values[0] == v.values[0] && values[1] == v.values[1] && values[2] == v.values[2] && values[3] == v.values[3];
+    }
+    
+    bool operator!=(const Derived& v) const 
+    {
+        return !(operator==(v));
+    }
+    
+    bool is_equal(const Derived& v, T epsilon = 0.001) const 
+    {
+        return Math<T>::is_equal(values[0], v.values[0], epsilon) && Math<T>::is_equal(values[1], v.values[1], epsilon && Math<T>::is_equal(values[2], v.values[2], epsilon) && Math<T>::is_equal(values[3], v.values[3], epsilon));
+    }
+    
+    friend Derived operator+(const Derived& v1, const Derived& v2)
+    {
+        return Derived{v1.values[0] + v2.values[0], v1.values[1] + v2.values[1], v1.values[2] + v2.values[2], v1.values[3] + v2.values[3]};
+    }
+
+    Derived& operator+=(const Derived& v)
+    {
+        values[0] += v.values[0];
+        values[1] += v.values[1];
+        values[2] += v.values[2];
+        values[3] += v.values[3];
+        return static_cast<Derived&>(*this);
+    }
+    
+    friend Derived operator-(const Derived& v1, const Derived& v2)
+    {
+        return Derived{v1.values[0] - v2.values[0], v1.values[1] - v2.values[1], v1.values[2] - v2.values[2], v1.values[3] - v2.values[3]};
+    }
+
+    Derived operator-() const
+    {
+        return Derived{-values[0], -values[1], -values[2], -values[3]};
+    }
+
+    Derived& operator-=(const Derived& v)
+    {
+        values[0] -= v.values[0];
+        values[1] -= v.values[1];
+        values[2] -= v.values[2];
+        values[3] -= v.values[3];
+        return static_cast<Derived&>(*this);
+    }
+
+    Derived operator*(T f) const
+    {
+        return Derived{values[0] * f, values[1] * f, values[2] * f, values[3] * f};
+    }
+
+    Derived& operator*=(T f)
+    {
+        values[0] *= f;
+        values[1] *= f;
+        values[2] *= f;
+        values[3] *= f;
+        return static_cast<Derived&>(*this);
+    }
+
+    Derived operator/(T f) const
+    {
+        return Derived{values[0] / f, values[1] / f, values[2] / f, values[3] / f};
+    }
+
+    Derived& operator/=(T f)
+    {
+        values[0] /= f;
+        values[1] /= f;
+        values[2] /= f;
+        values[3] /= f;
         return static_cast<Derived&>(*this);
     }
 };
@@ -249,6 +482,7 @@ public:
     
     using Base::operator==;
     using Base::operator!=;
+    using Base::is_equal;
     using Base::operator+=;
     using Base::operator-;
     using Base::operator-=;
@@ -256,6 +490,13 @@ public:
     using Base::operator*=;
     using Base::operator/;
     using Base::operator/=;
+    
+    std::string to_string() const
+    {
+        std::stringstream ss;
+        ss << "(" << w << "x" << h << ")";
+        return ss.str();
+    }
 };
 
 using Size2i = Size<int>;
@@ -328,6 +569,22 @@ public:
 using Region2f = Region<float>;
 using Region2i = Region<int>;
 
+class Transform
+{
+public:
+    Transform();
+    Transform(const ALLEGRO_TRANSFORM &transform);
+    Transform& operator=(const ALLEGRO_TRANSFORM &transform);
+    ALLEGRO_TRANSFORM to_allegro_transform() const;
+    void identity();
+    void use();
+    void translate(Vector2f position);
+    void scale(Vector2f factor);
+    void rotate(float angle);
+private:
+    ALLEGRO_TRANSFORM t;
+};
+
 class Random
 {
 public:
@@ -340,30 +597,8 @@ public:
 private:
     std::mt19937 rng;
 };
- 
-void init();
-void throw_exception(const char *file, int line, const char *format, ...);
 
-class Input;
-
-class Game
-{
-public:
-    Game(std::string title, Size2i window_size, bool fullscreen);
-    virtual ~Game();
-    void run();
-    void quit() { done = true; }
-    virtual void update(const Input& input) = 0;
-    virtual void render() = 0;
-    Size2i get_window_size() const { return window_size; }
-private:
-    bool done = false;
-    bool paused = false;
-    ALLEGRO_EVENT_QUEUE* queue;
-    ALLEGRO_TIMER* timer;
-    ALLEGRO_DISPLAY* display;
-    Size2i window_size;
-};
+// INPUT
 
 class Input
 {
@@ -404,17 +639,139 @@ private:
     friend class Game;
 };
 
-}
+// RESOURCES
 
+using Bitmap = std::shared_ptr<ALLEGRO_BITMAP>;
+using Font = std::shared_ptr<ALLEGRO_FONT>;
+using Sound = std::shared_ptr<ALLEGRO_SAMPLE>;
+using Music = std::shared_ptr<ALLEGRO_AUDIO_STREAM>;
 
+Bitmap make_bitmap(int width, int height);
+Bitmap load_bitmap(std::string filename);
+Bitmap cut_bitmap(Bitmap parent, Vector2i pos, Size2i size);
+Font load_font(std::string filename, int size);
+Sound load_sound(std::string filename);
+Music load_music(std::string filename);
 
-/*
- * ==============================================================
- *
- *                        IMPLEMENTATION
- *
- * ===============================================================
- */
+class Resources
+{
+public:
+    Bitmap get_bitmap(std::string filename);
+    std::vector<Bitmap> get_sub_bitmaps(std::string filename, int width, int height);
+    Font get_font(std::string filename, int size);
+    Sound get_sound(std::string filename);
+    Music get_music(std::string filename);
+private:
+    std::unordered_map<std::string, Bitmap> bitmaps;
+    std::unordered_map<std::string, std::vector<Bitmap>> sub_bitmaps;
+    std::unordered_map<std::string, Font> fonts;
+    std::unordered_map<std::string, Sound> sounds;
+    std::unordered_map<std::string, Music> music;
+};
+
+// GRAPHICS
+
+std::string load_file(std::string filename);
+GLuint make_shader(GLenum type, std::string source);
+GLuint load_shader(GLenum type, std::string filename);
+GLuint make_program(GLuint shader1, GLuint shader2);
+GLuint load_program(const char *path1, const char *path2);
+
+class Color : public VectorBase<Color, float, 4>
+{
+    using Base = VectorBase<Color, float, 4>;
+    
+public:
+    float& r;
+    float& g;
+    float& b;
+    float& a;
+    
+    Color(float r = 0.0f, float g = 0.0f, float b = 0.0f, float a = 0.0f) : Base(r, g, b, a), r(Base::values[0]), g(Base::values[1]), b(Base::values[2]), a(Base::values[3]) {}
+    Color(int r, int g, int b, int a) : Base(r / 255.0f, g / 255.0f, b / 255.0f, a / 255.0f), r(Base::values[0]), g(Base::values[1]), b(Base::values[2]), a(Base::values[3]) {}
+    Color& operator=(const Color& c) { r = c.r; g = c.g; b = c.b; a = c.a; return *this; }
+    Color(const ALLEGRO_COLOR& color) { operator=(color); }
+    Color& operator=(const ALLEGRO_COLOR& color) { al_unmap_rgba_f(color, &r, &g, &b, &a); return *this; }
+    
+    using Base::operator==;
+    using Base::operator!=;
+    using Base::is_equal;
+    using Base::operator+=;
+    using Base::operator-;
+    using Base::operator-=;
+    using Base::operator*;
+    using Base::operator*=;
+    using Base::operator/;
+    using Base::operator/=;
+    
+    ALLEGRO_COLOR to_allegro_color() const
+    {
+        return al_map_rgba_f(r, g, b, a);
+    }
+    
+    std::string to_string() const
+    {
+        std::stringstream ss;
+        ss << "(" << r << "," << g << "," << b << "," a << ")";
+        return ss.str();
+    }
+};
+
+class Camera2D
+{
+public:
+    void use() { get_transform().use(); }
+    void reset() { Transform t; t.use(); }
+    void move_to(Vector2f new_pos) { pos = new_pos; }
+    void move_by(Vector2f scroll) { pos -= scroll; }
+    void zoom_to(float z) { this->z = z; }
+    void zoom_by(float z) { this->z += z; }
+    void rotate_to(float r) { this->r = r; }
+    void rotate_by(float r) { this->r += r; }
+    float x() const { return pos.x; }
+    float y() const { return pos.y; }
+    float zoom() const { return z; }
+    float rotation() const { return r; }
+    Vector2f to_screen(Vector2f coords) const;
+    Vector2f to_world(Vector2f coords) const;
+private:
+    Transform get_transform() const;
+    Vector2f pos;
+    float z = 1.0;
+    float r = 0.0f;
+};
+
+// GAME
+
+class Game
+{
+public:
+    Game(std::string title, Size2i window_size, bool fullscreen);
+    virtual ~Game();
+    void run();
+    void quit() { done = true; }
+    virtual void update(const Input& input) = 0;
+    virtual void render() = 0;
+    Size2i get_window_size() const { return window_size; }
+private:
+    bool done = false;
+    bool paused = false;
+    ALLEGRO_EVENT_QUEUE* queue;
+    ALLEGRO_TIMER* timer;
+    ALLEGRO_DISPLAY* display;
+};
+
+class GameServices()
+{
+public:
+    GameServices& instance() { static GameServices gs; return gs; }
+    Size2i window_size;
+    Input input;
+};
+
+} // namespace io
+
+// IMPLEMENTATION
 
 #ifdef IO_IMPLEMENTATION
 
@@ -452,6 +809,312 @@ void throw_exception(const char *file, int line, const char *format, ...)
     throw std::runtime_error(ss.str());
 }
 
+// TRANSFORM
+
+Transform::Transform()
+{
+    identity();
+}
+
+Transform::Transform(const ALLEGRO_TRANSFORM &transform)
+{
+    al_copy_transform(&t, &transform);
+}
+
+Transform::Transform& operator=(const ALLEGRO_TRANSFORM &transform)
+{
+    al_copy_transform(&t, &transform);
+    return *this;
+}
+
+ALLEGRO_TRANSFORM Transform::to_allegro_transform() const
+{
+    return t;
+}
+
+void Transform::identity()
+{
+    al_identity_transform(&t);
+}
+
+void Transform::use()
+{
+    al_use_transform(&t);
+}
+
+void Transform::translate(Vector2f position)
+{
+    al_translate_transform(&t, position.x, position.y);
+}
+
+void Transform::scale(Vector2f factor)
+{
+    al_scale_transform(&t, factor.x, factor.y);
+}
+
+void Transform::rotate(float angle)
+{
+    al_rotate_transform(&t, angle);
+}
+
+// RANDOM
+
+Random::Random(unsigned int seed)
+{
+    rng.seed(seed);
+}
+
+int Random::get_next_int(int min, int max)
+{
+    std::uniform_int_distribution<int> dist(min, max);
+    return dist(rng);
+}
+
+float Random::get_next_float(float min, float max)
+{
+    std::uniform_real_distribution<float> dist(min, max);
+    return dist(rng);
+}
+
+bool Random::one_in(int chance)
+{
+    if (get_next_int(0, chance - 1) == 0)
+        return true;
+    return false;
+}
+
+int Random::roll_dice(int number, int sides)
+{
+    int result = 0;
+    for (int i = 0; i < number; i++)
+        result += get_next_int(1, sides);
+    return result;
+}
+
+int Input::wait_for_keypress()
+{
+    auto queue = std::shared_ptr<ALLEGRO_EVENT_QUEUE>(al_create_event_queue(), al_destroy_event_queue);
+    al_register_event_source(queue.get(), al_get_keyboard_event_source());
+    ALLEGRO_EVENT event;
+    do {
+        al_wait_for_event(queue.get(), &event);
+    } while (event.type != ALLEGRO_EVENT_KEY_DOWN);
+    return event.keyboard.keycode;
+}
+
+void Input::wait_for_any()
+{
+    auto queue = std::shared_ptr<ALLEGRO_EVENT_QUEUE>(al_create_event_queue(), al_destroy_event_queue);
+    al_register_event_source(queue.get(), al_get_keyboard_event_source());
+    ALLEGRO_EVENT event;
+    do {
+        al_wait_for_event(queue.get(), &event);
+    } while (event.type != ALLEGRO_EVENT_KEY_DOWN || event.type != ALLEGRO_EVENT_MOUSE_BUTTON_DOWN);
+}
+
+Bitmap make_bitmap(int width, int height)
+{
+    return Bitmap(al_create_bitmap(width, height), al_destroy_bitmap);
+}
+    
+Bitmap load_bitmap(std::string filename)
+{
+    return Bitmap(al_load_bitmap(filename.c_str()), al_destroy_bitmap);   
+}
+
+Bitmap cut_bitmap(Bitmap parent, Vector2i pos, Size2i size)
+{
+    return Bitmap(al_create_sub_bitmap(parent.get(), pos.x, pos.y, size.w, size.h), al_destroy_bitmap);
+}
+
+Font load_font(std::string filename, int size)
+{
+    return Font(al_load_font(filename.c_str(), size, 0), al_destroy_font);   
+}
+
+Sound load_sound(std::string filename)
+{
+    return Sound(al_load_sample(filename.c_str()), al_destroy_sample);   
+}
+
+Music load_music(std::string filename)
+{
+    return Music(al_load_audio_stream(filename.c_str(), 4, 2048), al_destroy_audio_stream);   
+}
+
+Bitmap Resources::get_bitmap(std::string filename)
+{
+    if (bitmaps.find(filename) != bitmaps.end())
+    {
+        return bitmaps[filename];
+    }
+
+    Bitmap bitmap = load_bitmap(filename);
+    if (!bitmap)
+    {
+        throw_exception("Failed to load bitmap: %s", filename.c_str());
+    }
+
+    bitmaps[filename] = bitmap;
+    return bitmap;
+}
+
+std::vector<Bitmap> Resources::get_sub_bitmaps(std::string filename, int width, int height)
+{
+    if (sub_bitmaps.find(filename) != sub_bitmaps.end()) {
+        return sub_bitmaps[filename];
+    }
+
+    Bitmap bitmap = get_bitmap(filename);
+    std::vector<Bitmap> sub_bmps;
+
+    int cols = bitmap.get_width() / width;
+    int rows = bitmap.get_height() / height;
+
+    for (int i = 0; i < cols; i++)
+    {
+        for (int j = 0; j < rows; j++)
+        {
+            Bitmap sub_bitmap = cut_bitmap(bitmap, { i * width, j * height }, { width, height });
+            if (!sub_bitmap)
+            {
+                IO_THROW("Failed to create sub-bitmaps for: %s", filename.c_str());
+            }
+            sub_bmps.push_back(sub_bmps);
+        }
+    }
+
+    sub_bitmaps[filename] = sub_bmps;
+    return sub_bmps;
+}
+
+Font Resources::get_font(std::string filename, int size)
+{
+    std::string font_name = filename + std::to_string(size);
+    if (fonts.find(font_name) != fonts.end())
+    {
+        return fonts[font_name];
+    }
+
+    Font font = load_font(filename, size);
+    if (!font)
+    {
+        IO_THROW("Failed to load font: %s (%d)", filename.c_str(), size);
+    }
+
+    fonts[font_name] = font;
+    return font;
+}
+
+Sound Resources::get_sound(std::string filename)
+{
+    if (sounds.find(filename) != sounds.end())
+    {
+        return sounds[filename];
+    }
+
+    Sound sound = load_sound(filename);
+    if (!sound)
+    {
+        IO_THROW("Failed to load sound: %s", filename.c_str());
+    }
+
+    sounds[filename] = sound;
+    return sound;
+}
+
+Music Resources::get_music(std::string filename)
+{
+    if (music.find(filename) != music.end())
+    {
+        return music[filename];
+    }
+
+    Music song = load_music(filename);
+    if (!song)
+    {
+        IO_THROW("Failed to load music: %s", filename.c_str());
+    }
+
+    al_attach_audio_stream_to_mixer(song.get(), al_get_default_mixer());
+    al_set_audio_stream_playing(song.get(), false);
+
+    music[filename] = song;
+    return song;
+}
+
+std::string load_file(std::string filename)
+{
+    // TODO: use allegro
+    FILE *file = fopen(path, "rb");
+    fseek(file, 0, SEEK_END);
+    int length = ftell(file);
+    rewind(file);
+    char *data = calloc(length + 1, sizeof(char));
+    fread(data, 1, length, file);
+    fclose(file);
+    return data;
+}
+
+GLuint make_shader(GLenum type, std::string source)
+{
+    GLuint shader = glCreateShader(type);
+    glShaderSource(shader, 1, &source.c_str(), NULL);
+    glCompileShader(shader);
+    GLint status;
+    glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
+    if (status == GL_FALSE)
+    {
+        GLint length;
+        glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &length);
+        GLchar *info = calloc(length, sizeof(GLchar));
+        glGetShaderInfoLog(shader, length, NULL, info);
+        fprintf(stderr, "glCompileShader failed:\n%s\n", info);
+        free(info);
+    }
+    return shader;
+}
+
+GLuint load_shader(GLenum type, std::string filename)
+{
+    std::string source = load_file(filename);
+    GLuint result = make_shader(type, source);
+    free(data);
+    return result;
+}
+
+GLuint make_program(GLuint vertex_shader, GLuint fragment_shader)
+{
+    GLuint program = glCreateProgram();
+    glAttachShader(program, vertex_shader);
+    glAttachShader(program, fragment_shader);
+    glLinkProgram(program);
+    GLint status;
+    glGetProgramiv(program, GL_LINK_STATUS, &status);
+    if (status == GL_FALSE)
+    {
+        GLint length;
+        glGetProgramiv(program, GL_INFO_LOG_LENGTH, &length);
+        GLchar *info = calloc(length, sizeof(GLchar));
+        glGetProgramInfoLog(program, length, NULL, info);
+        fprintf(stderr, "glLinkProgram failed: %s\n", info);
+        free(info);
+    }
+    glDetachShader(program, vertex_shader);
+    glDetachShader(program, fragment_shader);
+    glDeleteShader(vertex_shader);
+    glDeleteShader(fragment_shader);
+    return program;
+}
+
+GLuint load_program(std::string vertex_shader_filename, std::string fragment_shader_filename)
+{
+    GLuint vertex_shader = load_shader(GL_VERTEX_SHADER, vertex_shader_filename);
+    GLuint fragment_shader = load_shader(GL_FRAGMENT_SHADER, fragment_shader_filename);
+    GLuint program = make_program(vertex_shader, fragment_shader);
+    return program;
+}
+
 Game::Game(std::string title, Size2i window_size, bool fullscreen)
 {
     queue = al_create_event_queue();
@@ -463,7 +1126,7 @@ Game::Game(std::string title, Size2i window_size, bool fullscreen)
     al_register_event_source(queue, al_get_mouse_event_source());
     al_register_event_source(queue, al_get_timer_event_source(timer));
     al_register_event_source(queue, al_get_display_event_source(display));
-    this->window_size = window_size;
+    io().window_size = window_size;
 }
     
 Game::~Game()
@@ -477,7 +1140,7 @@ void Game::run()
 {
     bool redraw = true;
     al_start_timer(timer);
-    Input input;
+    auto& input = io().input;
     
     while (!done)
     {
@@ -566,60 +1229,7 @@ void Game::run()
     }
 }
 
-int Input::wait_for_keypress()
-{
-    auto queue = std::shared_ptr<ALLEGRO_EVENT_QUEUE>(al_create_event_queue(), al_destroy_event_queue);
-    al_register_event_source(queue.get(), al_get_keyboard_event_source());
-    ALLEGRO_EVENT event;
-    do {
-        al_wait_for_event(queue.get(), &event);
-    } while (event.type != ALLEGRO_EVENT_KEY_DOWN);
-    return event.keyboard.keycode;
-}
-
-void Input::wait_for_any()
-{
-    auto queue = std::shared_ptr<ALLEGRO_EVENT_QUEUE>(al_create_event_queue(), al_destroy_event_queue);
-    al_register_event_source(queue.get(), al_get_keyboard_event_source());
-    ALLEGRO_EVENT event;
-    do {
-        al_wait_for_event(queue.get(), &event);
-    } while (event.type != ALLEGRO_EVENT_KEY_DOWN || event.type != ALLEGRO_EVENT_MOUSE_BUTTON_DOWN);
-}
-
-Random::Random(unsigned int seed)
-{
-    rng.seed(seed);
-}
-
-int Random::get_next_int(int min, int max)
-{
-    std::uniform_int_distribution<int> dist(min, max);
-    return dist(rng);
-}
-
-float Random::get_next_float(float min, float max)
-{
-    std::uniform_real_distribution<float> dist(min, max);
-    return dist(rng);
-}
-
-bool Random::one_in(int chance)
-{
-    if (get_next_int(0, chance - 1) == 0)
-        return true;
-    return false;
-}
-
-int Random::roll_dice(int number, int sides)
-{
-    int result = 0;
-    for (int i = 0; i < number; i++)
-        result += get_next_int(1, sides);
-    return result;
-}
-
-}
+} // namespace io
 
 #endif // IO_IMPLEMENTATION
 
