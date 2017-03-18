@@ -1,40 +1,42 @@
 # generates a single header from all header and source files
 
 header_files = [
-    "Core.h"
-    "Transform.h",
-    "Game.h"
+    "Core.h",
+    "Math.h",
+    "VectorBase.h"
 ]
 
 source_files = [
-    "Transform.cpp",
-    "Game.cpp"
+    "Core.cpp"
 ]
 
 def process_file(path):
-    data = ""
-    found_begin = false
-    found_end = false
-    with open(template_file, "r") as infile
+    lines = []
+    with open(path, "r") as infile:
+        found_marker = False
         for line in infile:
-            if found_begin is True and found_end is False:
-                data += line
-            elif line.strip() == "/*BEGIN*/":
-                found_begin = True
+            if line.strip() == "/*BEGIN*/":
+                found_marker = True
             elif line.strip() == "/*END*/":
-                found_end = True
-    return data
+                break
+            elif found_marker is True:
+                lines += line
+    lines = lines[1:-2]
+    lines += "\n"
+    lines += "\n"
+    return lines
 
 def process_files(files):
-    data = ""
+    data = []
     for file in files:
-        data += process_file("../src/" + file)
-    return data
+        data.extend(process_file("src/" + file))
+    data = data[:-1]
+    return "".join(data)
 
-def generate_single_header(interface_source, implementation_sorce):
-    with open("template.h", "r") as infile, open("../io.h", "w") as outfile:
-        data = infile.read().replace("/*INTERFACE*/", interface_source)
-        data = data.replace("/*IMPLEMENTATION*/", implementation_sorce)
+def generate_single_header(interface_source, implementation_source):
+    with open("tools/template.h", "r") as infile, open("io.h", "w") as outfile:
+        data = infile.read().replace("/*INTERFACE*/\n", interface_source)
+        data = data.replace("/*IMPLEMENTATION*/\n", implementation_source)
         outfile.write(data)
 
 def generate():
