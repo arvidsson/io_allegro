@@ -15,7 +15,7 @@ public:
     Game(std::string title, Size2i window_size, bool fullscreen);
     virtual ~Game();
     void run();
-    void quit() { done = true; }
+    void quit();
     virtual void update() = 0;
     virtual void render() = 0;
 private:

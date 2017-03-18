@@ -595,15 +595,14 @@ private:
 class Input
 {
 public:
-    bool is_key_down(int key) const { return keyboard.keys[key].down; }
-    bool is_key_pressed(int key) const { return keyboard.keys[key].pressed; }
-    bool is_key_released(int key) const { return keyboard.keys[key].released; }
-    
-    bool is_mouse_button_down(int button) const { return mouse.buttons[button].down; }
-    bool is_mouse_button_pressed(int button) const { return mouse.buttons[button].pressed; }
-    bool is_mouse_button_released(int button) const { return mouse.buttons[button].released; }
-    int get_mouse_x() const { return mouse.x; }
-    int get_mouse_y() const { return mouse.y; }
+    bool is_key_down(int key) const;
+    bool is_key_pressed(int key) const;
+    bool is_key_released(int key) const;
+
+    bool is_mouse_button_down(int button) const;
+    bool is_mouse_button_pressed(int button) const;
+    bool is_mouse_button_released(int button) const;
+    Vector2i get_mouse_pos() const;
     
     static int wait_for_keypress();
     static void wait_for_any();
@@ -624,8 +623,9 @@ private:
     struct Mouse
     {
         std::array<Pressable, 10> buttons;
-        int x, y, z;
-        int old_x, old_y, old_z;
+        Vector2i pos;
+        Vector2i old_pos;
+        int wheel, old_wheel;
     } mouse;
     
     friend class Game;
@@ -669,11 +669,11 @@ public:
     float& b;
     float& a;
     
-    Color(float r = 0.0f, float g = 0.0f, float b = 0.0f, float a = 0.0f) : Base(r, g, b, a), r(Base::values[0]), g(Base::values[1]), b(Base::values[2]), a(Base::values[3]) {}
-    Color(int r, int g, int b, int a) : Base(r / 255.0f, g / 255.0f, b / 255.0f, a / 255.0f), r(Base::values[0]), g(Base::values[1]), b(Base::values[2]), a(Base::values[3]) {}
-    Color& operator=(const Color& c) { r = c.r; g = c.g; b = c.b; a = c.a; return *this; }
-    Color(const ALLEGRO_COLOR& color) : Color() { operator=(color); }
-    Color& operator=(const ALLEGRO_COLOR& color) { al_unmap_rgba_f(color, &r, &g, &b, &a); return *this; }
+    Color(float r = 0.0f, float g = 0.0f, float b = 0.0f, float a = 0.0f);
+    Color(int r, int g, int b, int a);
+    Color& operator=(const Color& c);
+    Color(const ALLEGRO_COLOR& color);
+    Color& operator=(const ALLEGRO_COLOR& color);
     
     using Base::operator==;
     using Base::operator!=;
@@ -686,17 +686,8 @@ public:
     using Base::operator/;
     using Base::operator/=;
     
-    ALLEGRO_COLOR to_allegro_color() const
-    {
-        return al_map_rgba_f(r, g, b, a);
-    }
-    
-    std::string to_string() const
-    {
-        std::stringstream ss;
-        ss << "(" << r << "," << g << "," << b << "," << a << ")";
-        return ss.str();
-    }
+    ALLEGRO_COLOR to_allegro_color() const;
+    std::string to_string() const;
 };
 
 class Camera2D
@@ -729,7 +720,7 @@ public:
     Game(std::string title, Size2i window_size, bool fullscreen);
     virtual ~Game();
     void run();
-    void quit() { done = true; }
+    void quit();
     virtual void update() = 0;
     virtual void render() = 0;
 private:
@@ -863,6 +854,41 @@ int Random::roll_dice(int number, int sides)
     for (int i = 0; i < number; i++)
         result += get_next_int(1, sides);
     return result;
+}
+
+bool Input::is_key_down(int key) const
+{
+    return keyboard.keys[key].down;
+}
+
+bool Input::is_key_pressed(int key) const
+{
+    return keyboard.keys[key].pressed;
+}
+
+bool Input::is_key_released(int key) const
+{
+    return keyboard.keys[key].released;
+}
+
+bool Input::is_mouse_button_down(int button) const
+{
+    return mouse.buttons[button].down;
+}
+
+bool Input::is_mouse_button_pressed(int button) const
+{
+    return mouse.buttons[button].pressed;
+}
+
+bool Input::is_mouse_button_released(int button) const
+{
+    return mouse.buttons[button].released;
+}
+
+Vector2i Input::get_mouse_pos() const
+{
+    return mouse.pos;
 }
 
 int Input::wait_for_keypress()
@@ -1017,6 +1043,46 @@ Music Resources::get_music(std::string filename)
     return song;
 }
 
+Color::Color(float r, float g, float b, float) : Base(r, g, b, a), r(Base::values[0]), g(Base::values[1]), b(Base::values[2]), a(Base::values[3])
+{
+}
+
+Color::Color(int r, int g, int b, int a) : Base(r / 255.0f, g / 255.0f, b / 255.0f, a / 255.0f), r(Base::values[0]), g(Base::values[1]), b(Base::values[2]), a(Base::values[3])
+{
+}
+
+Color& Color::operator=(const Color& c)
+{
+    r = c.r;
+    g = c.g;
+    b = c.b;
+    a = c.a;
+    return *this;
+}
+
+Color::Color(const ALLEGRO_COLOR& color) : Color()
+{
+    operator=(color);
+}
+
+Color& Color::operator=(const ALLEGRO_COLOR& color)
+{
+    al_unmap_rgba_f(color, &r, &g, &b, &a);
+    return *this;
+}
+
+ALLEGRO_COLOR Color::to_allegro_color() const
+{
+    return al_map_rgba_f(r, g, b, a);
+}
+
+std::string Color::to_string() const
+{
+    std::stringstream ss;
+    ss << "(" << r << "," << g << "," << b << "," << a << ")";
+    return ss.str();
+}
+
 Game::Game(std::string title, Size2i window_size, bool fullscreen)
 {
     queue = al_create_event_queue();
@@ -1069,9 +1135,8 @@ void Game::run()
                     button.pressed = false;
                     button.released = false;
                 }
-                input.mouse.old_x = input.mouse.x;
-                input.mouse.old_y = input.mouse.y;
-                input.mouse.old_z = input.mouse.z;
+                input.mouse.old_pos = input.mouse.pos;
+                input.mouse.old_wheel = input.mouse.wheel;
                 break;
 
             case ALLEGRO_EVENT_KEY_DOWN:
@@ -1092,9 +1157,9 @@ void Game::run()
                 break;
 
             case ALLEGRO_EVENT_MOUSE_AXES:
-                input.mouse.x = event.mouse.x;
-                input.mouse.y = event.mouse.y;
-                input.mouse.z = event.mouse.z;
+                input.mouse.pos.x = event.mouse.x;
+                input.mouse.pos.y = event.mouse.y;
+                input.mouse.wheel = event.mouse.z;
                 break;
 
             case ALLEGRO_EVENT_MOUSE_BUTTON_DOWN:
@@ -1129,6 +1194,11 @@ void Game::run()
             al_flip_display();
         }
     }
+}
+
+void Game::quit()
+{
+    done = true;
 }
 
 } // namespace io

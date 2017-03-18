@@ -57,9 +57,8 @@ void Game::run()
                     button.pressed = false;
                     button.released = false;
                 }
-                input.mouse.old_x = input.mouse.x;
-                input.mouse.old_y = input.mouse.y;
-                input.mouse.old_z = input.mouse.z;
+                input.mouse.old_pos = input.mouse.pos;
+                input.mouse.old_wheel = input.mouse.wheel;
                 break;
 
             case ALLEGRO_EVENT_KEY_DOWN:
@@ -80,9 +79,9 @@ void Game::run()
                 break;
 
             case ALLEGRO_EVENT_MOUSE_AXES:
-                input.mouse.x = event.mouse.x;
-                input.mouse.y = event.mouse.y;
-                input.mouse.z = event.mouse.z;
+                input.mouse.pos.x = event.mouse.x;
+                input.mouse.pos.y = event.mouse.y;
+                input.mouse.wheel = event.mouse.z;
                 break;
 
             case ALLEGRO_EVENT_MOUSE_BUTTON_DOWN:
@@ -117,6 +116,11 @@ void Game::run()
             al_flip_display();
         }
     }
+}
+
+void Game::quit()
+{
+    done = true;
 }
 
 /*END*/

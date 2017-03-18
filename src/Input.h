@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core.h"
+#include "Vector.h"
 
 namespace io
 {
@@ -10,15 +11,14 @@ namespace io
 class Input
 {
 public:
-    bool is_key_down(int key) const { return keyboard.keys[key].down; }
-    bool is_key_pressed(int key) const { return keyboard.keys[key].pressed; }
-    bool is_key_released(int key) const { return keyboard.keys[key].released; }
-    
-    bool is_mouse_button_down(int button) const { return mouse.buttons[button].down; }
-    bool is_mouse_button_pressed(int button) const { return mouse.buttons[button].pressed; }
-    bool is_mouse_button_released(int button) const { return mouse.buttons[button].released; }
-    int get_mouse_x() const { return mouse.x; }
-    int get_mouse_y() const { return mouse.y; }
+    bool is_key_down(int key) const;
+    bool is_key_pressed(int key) const;
+    bool is_key_released(int key) const;
+
+    bool is_mouse_button_down(int button) const;
+    bool is_mouse_button_pressed(int button) const;
+    bool is_mouse_button_released(int button) const;
+    Vector2i get_mouse_pos() const;
     
     static int wait_for_keypress();
     static void wait_for_any();
@@ -39,8 +39,9 @@ private:
     struct Mouse
     {
         std::array<Pressable, 10> buttons;
-        int x, y, z;
-        int old_x, old_y, old_z;
+        Vector2i pos;
+        Vector2i old_pos;
+        int wheel, old_wheel;
     } mouse;
     
     friend class Game;

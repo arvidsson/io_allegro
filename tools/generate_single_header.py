@@ -23,6 +23,7 @@ source_files = [
     "Random.cpp",
     "Input.cpp",
     "Resources.cpp",
+    "Color.cpp",
     "Game.cpp"
 ]
 
