@@ -31,6 +31,18 @@ void Transform::identity()
     al_identity_transform(&t);
 }
 
+void Transform::invert()
+{
+    al_invert_transform(&t);
+}
+
+Transform Transform::inverted() const
+{
+    Transform t = *this;
+    t.invert();
+    return t;
+}
+
 void Transform::use()
 {
     al_use_transform(&t);
@@ -49,6 +61,13 @@ void Transform::scale(Vector2f factor)
 void Transform::rotate(float angle)
 {
     al_rotate_transform(&t, angle);
+}
+
+Vector2f Transform::transform_coordinates(Vector2f coordinates)
+{
+    float x, y;
+    al_transform_coordinates(&t, &x, &y);
+    return Vector2f{x, y};
 }
 
 /*END*/

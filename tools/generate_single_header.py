@@ -24,6 +24,7 @@ source_files = [
     "Input.cpp",
     "Resources.cpp",
     "Color.cpp",
+    "Camera2D.cpp",
     "Game.cpp"
 ]
 

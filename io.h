@@ -571,10 +571,13 @@ public:
     Transform& operator=(const ALLEGRO_TRANSFORM &transform);
     ALLEGRO_TRANSFORM to_allegro_transform() const;
     void identity();
+    void invert();
+    Transform inverted() const;
     void use();
     void translate(Vector2f position);
     void scale(Vector2f factor);
     void rotate(float angle);
+    Vector2f transform_coordinates(Vector2f coordinates);
 private:
     ALLEGRO_TRANSFORM t;
 };
@@ -693,18 +696,18 @@ public:
 class Camera2D
 {
 public:
-    void use() { get_transform().use(); }
-    void reset() { Transform t; t.use(); }
-    void move_to(Vector2f new_pos) { pos = new_pos; }
-    void move_by(Vector2f scroll) { pos -= scroll; }
-    void zoom_to(float z) { this->z = z; }
-    void zoom_by(float z) { this->z += z; }
-    void rotate_to(float r) { this->r = r; }
-    void rotate_by(float r) { this->r += r; }
-    float x() const { return pos.x; }
-    float y() const { return pos.y; }
-    float zoom() const { return z; }
-    float rotation() const { return r; }
+    void use();
+    void reset();
+    void move_to(Vector2f new_pos);
+    void move_by(Vector2f scroll_factor);
+    void zoom_to(float new_zoom);
+    void zoom_by(float zoom_factor);
+    void rotate_to(float new_rotation);
+    void rotate_by(float rotation_factor);
+    float x() const;
+    float y() const;
+    float zoom() const;
+    float rotation() const;
     Vector2f to_screen(Vector2f coords) const;
     Vector2f to_world(Vector2f coords) const;
 private:
@@ -804,6 +807,18 @@ void Transform::identity()
     al_identity_transform(&t);
 }
 
+void Transform::invert()
+{
+    al_invert_transform(&t);
+}
+
+Transform Transform::inverted() const
+{
+    Transform t = *this;
+    t.invert();
+    return t;
+}
+
 void Transform::use()
 {
     al_use_transform(&t);
@@ -822,6 +837,13 @@ void Transform::scale(Vector2f factor)
 void Transform::rotate(float angle)
 {
     al_rotate_transform(&t, angle);
+}
+
+Vector2f Transform::transform_coordinates(Vector2f coordinates)
+{
+    float x, y;
+    al_transform_coordinates(&t, &x, &y);
+    return Vector2f{x, y};
 }
 
 Random::Random(unsigned int seed)
@@ -1081,6 +1103,94 @@ std::string Color::to_string() const
     std::stringstream ss;
     ss << "(" << r << "," << g << "," << b << "," << a << ")";
     return ss.str();
+}
+
+void Camera2D::use()
+{
+    get_transform().use();
+}
+
+void Camera2D::reset()
+{
+    Transform t;
+    t.use();
+}
+
+void Camera2D::move_to(Vector2f new_pos)
+{
+    pos = new_pos;
+}
+
+void Camera2D::move_by(Vector2f scroll_factor)
+{
+    pos -= scroll_factor;
+}
+
+void Camera2D::zoom_to(float new_zoom)
+{
+    z = new_zoom;
+}
+
+void Camera2D::zoom_by(float zoom_factor)
+{
+    z += zoom_factor;
+}
+
+void Camera2D::rotate_to(float new_rotation)
+{
+    r = new_rotation;
+}
+
+void Camera2D::rotate_by(float rotation_factor)
+{
+    r += rotation_factor;
+}
+
+float Camera2D::x() const
+{
+    return pos.x;
+}
+
+float Camera2D::y() const
+{
+    return pos.y;
+}
+
+float Camera2D::zoom() const
+{
+    return z;
+}
+
+float Camera2D::rotation() const
+{
+    return r;
+}
+
+Vector2f Camera2D::to_screen(Vector2f coords) const
+{
+    return get_transform().transform_coordinates(coords);
+}
+
+Vector2f Camera2D::to_world(Vector2f coords) const
+{
+    return get_transform().inverted().transform_coordinates(coords);
+}
+
+Transform Camera2D::get_transform() const
+{
+    Transform t;
+
+    // move, rotate, zoom
+    t.translate(-pos);
+    t.rotate(r);
+    t.scale({ z, z });
+
+    // center camera
+    auto width = al_get_display_width(al_get_current_display());
+    auto height = al_get_display_height(al_get_current_display());
+    t.translate({ width / 2.0f, height / 2.0f });
+
+    return t;
 }
 
 Game::Game(std::string title, Size2i window_size, bool fullscreen)

@@ -12,18 +12,18 @@ namespace io
 class Camera2D
 {
 public:
-    void use() { get_transform().use(); }
-    void reset() { Transform t; t.use(); }
-    void move_to(Vector2f new_pos) { pos = new_pos; }
-    void move_by(Vector2f scroll) { pos -= scroll; }
-    void zoom_to(float z) { this->z = z; }
-    void zoom_by(float z) { this->z += z; }
-    void rotate_to(float r) { this->r = r; }
-    void rotate_by(float r) { this->r += r; }
-    float x() const { return pos.x; }
-    float y() const { return pos.y; }
-    float zoom() const { return z; }
-    float rotation() const { return r; }
+    void use();
+    void reset();
+    void move_to(Vector2f new_pos);
+    void move_by(Vector2f scroll_factor);
+    void zoom_to(float new_zoom);
+    void zoom_by(float zoom_factor);
+    void rotate_to(float new_rotation);
+    void rotate_by(float rotation_factor);
+    float x() const;
+    float y() const;
+    float zoom() const;
+    float rotation() const;
     Vector2f to_screen(Vector2f coords) const;
     Vector2f to_world(Vector2f coords) const;
 private:
