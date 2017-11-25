@@ -6,13 +6,14 @@ header_files = [
     "VectorBase.h",
     "Vector.h",
     "Size.h",
-    "Region.h",
+    "Rect.h",
     "Transform.h",
     "Random.h",
     "Input.h",
     "Resources.h",
     "Color.h",
     "Camera2D.h",
+    "Config.h",
     "Game.h",
     "GameServices.h"
 ]
@@ -25,6 +26,7 @@ source_files = [
     "Resources.cpp",
     "Color.cpp",
     "Camera2D.cpp",
+    "Config.cpp",
     "Game.cpp"
 ]
 

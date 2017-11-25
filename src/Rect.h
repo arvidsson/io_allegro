@@ -8,14 +8,14 @@ namespace io
 /*BEGIN*/
 
 template <typename T>
-class Region
+class Rect
 {
 public:
     Vector<T> pos;
     Size<T> size;
     
-    Region(T x, T y, T w, T h) : pos(x, y), size(w, h) {}
-    Region(Vector<T> pos, Size<T> size) : pos(pos), size(size) {}
+    Rect(T x, T y, T w, T h) : pos(x, y), size(w, h) {}
+    Rect(Vector<T> pos, Size<T> size) : pos(pos), size(size) {}
 
     T x() const { return pos.x; }
     T y() const { return pos.y; }
@@ -43,7 +43,7 @@ public:
         return contains(v.x, v.y);
     }
     
-    bool contains(const Region<T>& r) const
+    bool contains(const Rect<T>& r) const
     {
         return contains(r.left(), r.top()) && contains(r.right(), r.bottom());
     }
@@ -53,7 +53,7 @@ public:
         return !(x0 > right() || x1 < left() || y0 > bottom() || y1 < top());
     }
     
-    bool intersects(const Region<T>& r) const
+    bool intersects(const Rect<T>& r) const
     {
         return intersects(r.left(), r.top(), r.right(), r.bottom());
     }
@@ -61,6 +61,15 @@ public:
     bool intersects(const Vector<T>& v, T radius) const
     {
         return false;
+    }
+
+    Rect<T> intersection(const Rect<T>& r) const
+    {
+        auto l = std::max(left(), r.left());
+        auto r = std::min(right(), r.right());
+        auto t = std::max(top(), r.top());
+        auto b = std::min(bottom(), r.bottom());
+        return Rect<T>(l, t, r - l, t - b);
     }
     
     std::string to_string() const
@@ -71,8 +80,8 @@ public:
     }
 };
 
-using Region2f = Region<float>;
-using Region2i = Region<int>;
+using Rect2f = Rect<float>;
+using Rect2i = Rect<int>;
 
 /*END*/
 

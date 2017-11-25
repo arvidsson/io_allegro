@@ -5,7 +5,7 @@ namespace io
 
 /*BEGIN*/
 
-Color::Color(float r, float g, float b, float) : Base(r, g, b, a), r(Base::values[0]), g(Base::values[1]), b(Base::values[2]), a(Base::values[3])
+Color::Color(float r, float g, float b, float a) : Base(r, g, b, a), r(Base::values[0]), g(Base::values[1]), b(Base::values[2]), a(Base::values[3])
 {
 }
 

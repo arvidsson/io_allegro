@@ -7,16 +7,25 @@ namespace io
 
 Game::Game(std::string title, Size2i window_size, bool fullscreen)
 {
-    queue = al_create_event_queue();
-    timer = al_create_timer(1.0 / 60);
-    fullscreen ? al_set_new_display_flags(ALLEGRO_FULLSCREEN_WINDOW) : al_set_new_display_flags(ALLEGRO_WINDOWED);
-    display = al_create_display(window_size.w, window_size.h);
-    al_set_window_title(display, title.c_str());
-    al_register_event_source(queue, al_get_keyboard_event_source());
-    al_register_event_source(queue, al_get_mouse_event_source());
-    al_register_event_source(queue, al_get_timer_event_source(timer));
-    al_register_event_source(queue, al_get_display_event_source(display));
-    io().window_size = window_size;
+    initialize(title, window_size, fullscreen);
+}
+
+Game::Game(std::string title, std::string config_path)
+{
+    Size2i default_window_size = { 800, 600 };
+    bool default_fullscreen = false;
+
+    Config cfg(config_path);
+    if (cfg.has_value("width"))
+    {
+        default_window_size.w = cfg.get_int("width");
+    }
+    if (cfg.has_value("height"))
+    {
+        default_window_size.h = cfg.get_int("height");
+    }
+
+    initialize(title, default_window_size, default_fullscreen);
 }
     
 Game::~Game()
@@ -36,6 +45,7 @@ void Game::run()
     {
         ALLEGRO_EVENT event;
         al_wait_for_event(queue, &event);
+        process_event(event);
         
         switch (event.type)
         {
@@ -121,6 +131,20 @@ void Game::run()
 void Game::quit()
 {
     done = true;
+}
+
+void Game::initialize(std::string title, Size2i window_size, bool fullscreen)
+{
+    queue = al_create_event_queue();
+    timer = al_create_timer(1.0 / 60);
+    fullscreen ? al_set_new_display_flags(ALLEGRO_FULLSCREEN_WINDOW | ALLEGRO_OPENGL) : al_set_new_display_flags(ALLEGRO_WINDOWED | ALLEGRO_OPENGL);
+    display = al_create_display(window_size.w, window_size.h);
+    al_set_window_title(display, title.c_str());
+    al_register_event_source(queue, al_get_keyboard_event_source());
+    al_register_event_source(queue, al_get_mouse_event_source());
+    al_register_event_source(queue, al_get_timer_event_source(timer));
+    al_register_event_source(queue, al_get_display_event_source(display));
+    io().window_size = window_size;
 }
 
 /*END*/

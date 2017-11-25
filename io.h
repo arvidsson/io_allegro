@@ -497,14 +497,14 @@ using Size2i = Size<int>;
 using Size2f = Size<float>;
 
 template <typename T>
-class Region
+class Rect
 {
 public:
     Vector<T> pos;
     Size<T> size;
     
-    Region(T x, T y, T w, T h) : pos(x, y), size(w, h) {}
-    Region(Vector<T> pos, Size<T> size) : pos(pos), size(size) {}
+    Rect(T x, T y, T w, T h) : pos(x, y), size(w, h) {}
+    Rect(Vector<T> pos, Size<T> size) : pos(pos), size(size) {}
 
     T x() const { return pos.x; }
     T y() const { return pos.y; }
@@ -532,7 +532,7 @@ public:
         return contains(v.x, v.y);
     }
     
-    bool contains(const Region<T>& r) const
+    bool contains(const Rect<T>& r) const
     {
         return contains(r.left(), r.top()) && contains(r.right(), r.bottom());
     }
@@ -542,7 +542,7 @@ public:
         return !(x0 > right() || x1 < left() || y0 > bottom() || y1 < top());
     }
     
-    bool intersects(const Region<T>& r) const
+    bool intersects(const Rect<T>& r) const
     {
         return intersects(r.left(), r.top(), r.right(), r.bottom());
     }
@@ -550,6 +550,15 @@ public:
     bool intersects(const Vector<T>& v, T radius) const
     {
         return false;
+    }
+
+    Rect<T> intersection(const Rect<T>& r) const
+    {
+        auto l = std::max(left(), r.left());
+        auto r = std::min(right(), r.right());
+        auto t = std::max(top(), r.top());
+        auto b = std::min(bottom(), r.bottom());
+        return Rect<T>(l, t, r - l, t - b);
     }
     
     std::string to_string() const
@@ -560,8 +569,8 @@ public:
     }
 };
 
-using Region2f = Region<float>;
-using Region2i = Region<int>;
+using Rect2f = Rect<float>;
+using Rect2i = Rect<int>;
 
 class Transform
 {
@@ -717,16 +726,34 @@ private:
     float r = 0.0f;
 };
 
+class Config
+{
+public:
+    Config(std::string filename);
+    ~Config();
+    bool has_value(std::string key, std::string section = "");
+    bool get_bool(std::string key, std::string section = "");
+    int get_int(std::string key, std::string section = "");
+    float get_float(std::string key, std::string section = "");
+    std::string get_string(std::string key, std::string section = "");
+
+private:
+    ALLEGRO_CONFIG* cfg;
+};
+
 class Game
 {
 public:
     Game(std::string title, Size2i window_size, bool fullscreen);
+    Game(std::string title, std::string config_path);
     virtual ~Game();
     void run();
     void quit();
     virtual void update() = 0;
     virtual void render() = 0;
-private:
+    virtual void process_event(ALLEGRO_EVENT event) {}
+protected:
+    void initialize(std::string title, Size2i window_size, bool fullscreen);
     bool done = false;
     bool paused = false;
     ALLEGRO_EVENT_QUEUE* queue;
@@ -1065,7 +1092,7 @@ Music Resources::get_music(std::string filename)
     return song;
 }
 
-Color::Color(float r, float g, float b, float) : Base(r, g, b, a), r(Base::values[0]), g(Base::values[1]), b(Base::values[2]), a(Base::values[3])
+Color::Color(float r, float g, float b, float a) : Base(r, g, b, a), r(Base::values[0]), g(Base::values[1]), b(Base::values[2]), a(Base::values[3])
 {
 }
 
@@ -1193,18 +1220,79 @@ Transform Camera2D::get_transform() const
     return t;
 }
 
+Config::Config(std::string filename)
+{
+    cfg = al_load_config_file(filename.c_str());
+    if (!cfg)
+    {
+        IO_THROW("Failed to load config file: %s", cfg);
+    }
+}
+
+Config::~Config()
+{
+    al_destroy_config(cfg);
+}
+
+bool Config::has_value(std::string key, std::string section)
+{
+    if (al_get_config_value(cfg, section.c_str(), key.c_str()))
+    {
+        return true;
+    }
+    return false;
+}
+
+bool Config::get_bool(std::string key, std::string section)
+{
+    std::string value = al_get_config_value(cfg, section.c_str(), key.c_str());
+    if (value.compare("true") == 0)
+    {
+        return true;
+    }
+    return false;
+}
+
+int Config::get_int(std::string key, std::string section)
+{
+    std::string value = al_get_config_value(cfg, section.c_str(), key.c_str());
+    return std::stoi(value);
+}
+
+float Config::get_float(std::string key, std::string section)
+{
+    std::string value = al_get_config_value(cfg, section.c_str(), key.c_str());
+    return std::stof(value);
+}
+
+std::string Config::get_string(std::string key, std::string section)
+{
+    std::string value = al_get_config_value(cfg, section.c_str(), key.c_str());
+    return value;
+}
+
+
 Game::Game(std::string title, Size2i window_size, bool fullscreen)
 {
-    queue = al_create_event_queue();
-    timer = al_create_timer(1.0 / 60);
-    fullscreen ? al_set_new_display_flags(ALLEGRO_FULLSCREEN_WINDOW) : al_set_new_display_flags(ALLEGRO_WINDOWED);
-    display = al_create_display(window_size.w, window_size.h);
-    al_set_window_title(display, title.c_str());
-    al_register_event_source(queue, al_get_keyboard_event_source());
-    al_register_event_source(queue, al_get_mouse_event_source());
-    al_register_event_source(queue, al_get_timer_event_source(timer));
-    al_register_event_source(queue, al_get_display_event_source(display));
-    io().window_size = window_size;
+    initialize(title, window_size, fullscreen);
+}
+
+Game::Game(std::string title, std::string config_path)
+{
+    Size2i default_window_size = { 800, 600 };
+    bool default_fullscreen = false;
+
+    Config cfg(config_path);
+    if (cfg.has_value("width"))
+    {
+        default_window_size.w = cfg.get_int("width");
+    }
+    if (cfg.has_value("height"))
+    {
+        default_window_size.h = cfg.get_int("height");
+    }
+
+    initialize(title, default_window_size, default_fullscreen);
 }
     
 Game::~Game()
@@ -1224,6 +1312,7 @@ void Game::run()
     {
         ALLEGRO_EVENT event;
         al_wait_for_event(queue, &event);
+        process_event(event);
         
         switch (event.type)
         {
@@ -1309,6 +1398,20 @@ void Game::run()
 void Game::quit()
 {
     done = true;
+}
+
+void Game::initialize(std::string title, Size2i window_size, bool fullscreen)
+{
+    queue = al_create_event_queue();
+    timer = al_create_timer(1.0 / 60);
+    fullscreen ? al_set_new_display_flags(ALLEGRO_FULLSCREEN_WINDOW | ALLEGRO_OPENGL) : al_set_new_display_flags(ALLEGRO_WINDOWED | ALLEGRO_OPENGL);
+    display = al_create_display(window_size.w, window_size.h);
+    al_set_window_title(display, title.c_str());
+    al_register_event_source(queue, al_get_keyboard_event_source());
+    al_register_event_source(queue, al_get_mouse_event_source());
+    al_register_event_source(queue, al_get_timer_event_source(timer));
+    al_register_event_source(queue, al_get_display_event_source(display));
+    io().window_size = window_size;
 }
 
 } // namespace io
